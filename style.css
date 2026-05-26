@@ -1,0 +1,1521 @@
+/* ==========================================================================
+   MathQuest V3 - Premium Design System & Stylesheet
+   Color tokens, glassmorphism, Outfit/Fredoka fonts, responsive 3D buttons,
+   9x9 Sudoku grid, Achievements achievements layout and Mateo AI Scanner simulation.
+   ========================================================================== */
+
+:root {
+    /* Fuentes */
+    --font-primary: 'Outfit', sans-serif;
+    --font-heading: 'Fredoka', sans-serif;
+
+    /* Tema Oscuro (Defecto) */
+    --color-bg: #0f172a;
+    --color-card: #1e293b;
+    --color-card-secondary: #334155;
+    --color-text: #f8fafc;
+    --color-text-muted: #94a3b8;
+    --color-border: #475569;
+    --color-border-glow: #6366f1;
+    --color-canvas-bg: #0b0f19;
+    --color-grid-line: #1e293b;
+
+    /* Acentos */
+    --color-accent-blue: #3b82f6;
+    --color-accent-purple: #8b5cf6;
+    --color-accent-coral: #f43f5e;
+    --color-accent-yellow: #eab308;
+    --color-accent-green: #10b981;
+    
+    /* Botones y Sombras */
+    --shadow-premium: 0 8px 30px rgba(0, 0, 0, 0.35);
+    --shadow-inset: inset 0 2px 4px rgba(255, 255, 255, 0.05);
+    --border-radius-large: 20px;
+    --border-radius-medium: 12px;
+}
+
+[data-theme="light"] {
+    /* Tema Claro Premium */
+    --color-bg: #f1f5f9;
+    --color-card: #ffffff;
+    --color-card-secondary: #f8fafc;
+    --color-text: #0f172a;
+    --color-text-muted: #64748b;
+    --color-border: #cbd5e1;
+    --color-border-glow: #3b82f6;
+    --color-canvas-bg: #ffffff;
+    --color-grid-line: #f1f5f9;
+    
+    --shadow-premium: 0 8px 30px rgba(15, 23, 42, 0.08);
+}
+
+/* --------------------------------------------------------------------------
+   Reset General
+   -------------------------------------------------------------------------- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+body {
+    font-family: var(--font-primary);
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Capa de confeti flotante */
+#confetti-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* --------------------------------------------------------------------------
+   Cabecera Premium
+   -------------------------------------------------------------------------- */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background: rgba(var(--color-card), 0.7);
+    backdrop-filter: blur(10px);
+    border-bottom: 3px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
+    font-weight: 700;
+    user-select: none;
+}
+
+.logo-emoji {
+    font-size: 2rem;
+}
+
+.logo .accent {
+    color: var(--color-accent-blue);
+}
+
+.logo-version {
+    font-size: 0.8rem;
+    background: var(--color-accent-purple);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 20px;
+    margin-left: 5px;
+}
+
+.user-stats {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--color-card);
+    border: 2px solid var(--color-border);
+    padding: 6px 12px;
+    border-radius: 30px;
+    font-weight: 800;
+    font-size: 0.95rem;
+    box-shadow: var(--shadow-inset);
+    cursor: default;
+    transition: transform 0.2s ease;
+}
+
+.stat-pill:hover {
+    transform: translateY(-2px);
+}
+
+.hints-pill {
+    background: var(--color-card-secondary);
+    border-color: var(--color-accent-yellow);
+    color: var(--color-accent-yellow);
+    cursor: pointer !important;
+}
+
+/* Selector de Tema */
+.theme-toggle-btn {
+    background: var(--color-card);
+    border: 2px solid var(--color-border);
+    color: var(--color-text);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-inset);
+}
+
+[data-theme="dark"] .sun-icon { display: block; }
+[data-theme="dark"] .moon-icon { display: none; }
+[data-theme="light"] .sun-icon { display: none; }
+[data-theme="light"] .moon-icon { display: block; }
+
+/* Avatar y Medalla */
+.avatar-header-container {
+    position: relative;
+    width: 45px;
+    height: 45px;
+}
+
+.header-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2.5px solid var(--color-border-glow);
+    background: var(--color-card);
+}
+
+.badge-overlay {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+/* --------------------------------------------------------------------------
+   Layout Contenedor Principal
+   -------------------------------------------------------------------------- */
+.app-container {
+    max-width: 1100px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.screen {
+    animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hidden {
+    display: none !important;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Tarjeta Base Premium */
+.card {
+    background: var(--color-card);
+    border: 3px solid var(--color-border);
+    border-radius: var(--border-radius-large);
+    padding: 24px;
+    box-shadow: var(--shadow-premium);
+    margin-bottom: 24px;
+    position: relative;
+}
+
+/* --------------------------------------------------------------------------
+   Diseño de Botones 3D Premium
+   -------------------------------------------------------------------------- */
+.btn {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    border-radius: var(--border-radius-medium);
+    padding: 12px 24px;
+    cursor: pointer;
+    position: relative;
+    outline: none;
+    display: inline-block;
+    text-align: center;
+    transition: transform 0.1s ease, filter 0.2s ease;
+}
+
+.btn-primary {
+    background: var(--color-accent-blue);
+    color: white;
+    box-shadow: 0 5px 0 #1d4ed8, 0 8px 15px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 #1d4ed8;
+}
+
+.btn-secondary {
+    background: var(--color-card-secondary);
+    color: var(--color-text);
+    box-shadow: 0 5px 0 var(--color-border), 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.btn-secondary:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 var(--color-border);
+}
+
+.btn-accent {
+    background: var(--color-accent-coral);
+    color: white;
+    box-shadow: 0 5px 0 #be123c, 0 8px 15px rgba(244, 63, 94, 0.3);
+}
+
+.btn-accent:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 #be123c;
+}
+
+.btn-equipped {
+    background: var(--color-accent-green);
+    color: white;
+    box-shadow: 0 5px 0 #047857;
+}
+
+.btn-equipped:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 #047857;
+}
+
+.btn-large {
+    font-size: 1.15rem;
+    padding: 16px 36px;
+    border-radius: 16px;
+}
+
+.w-100 {
+    width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Hub - Banner de Bienvenida y Mateo
+   -------------------------------------------------------------------------- */
+.welcome-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, var(--color-accent-blue) 0%, var(--color-accent-purple) 100%);
+    border-color: var(--color-accent-purple);
+    color: white;
+}
+
+.welcome-info h1 {
+    font-family: var(--font-heading);
+    font-size: 2.2rem;
+    margin-bottom: 8px;
+}
+
+.welcome-info p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    max-width: 600px;
+}
+
+.mateo-mascot-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 150px;
+}
+
+.mateo-bubble {
+    background: white;
+    color: #1e293b;
+    border: 3px solid #1e293b;
+    border-radius: var(--border-radius-medium);
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-align: center;
+    position: absolute;
+    top: -55px;
+    width: 160px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.mateo-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 10px 10px 0;
+    border-style: solid;
+    border-color: white transparent;
+    display: block;
+    width: 0;
+}
+
+.mateo-avatar {
+    width: 80px;
+    height: 80px;
+}
+
+/* --------------------------------------------------------------------------
+   Hub - Selector de Avatar
+   -------------------------------------------------------------------------- */
+.avatar-selection-section h2 {
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+}
+
+.avatar-grid {
+    display: flex;
+    gap: 15px;
+}
+
+.avatar-option {
+    width: 65px;
+    height: 65px;
+    border: 3px solid var(--color-border);
+    border-radius: 50%;
+    cursor: pointer;
+    background: var(--color-card-secondary);
+    padding: 5px;
+    transition: border-color 0.2s, transform 0.2s;
+}
+
+.avatar-option.selected {
+    border-color: var(--color-accent-blue);
+    transform: scale(1.1);
+}
+
+/* --------------------------------------------------------------------------
+   Hub - Pestañas Modulares
+   -------------------------------------------------------------------------- */
+.hub-tabs-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.tab-btn {
+    flex: 1;
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    background: var(--color-card);
+    border: 3px solid var(--color-border);
+    color: var(--color-text-muted);
+    border-radius: var(--border-radius-medium);
+    padding: 12px;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.tab-btn.active {
+    background: var(--color-accent-blue);
+    border-color: var(--color-accent-blue);
+    color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.tab-btn-scanner {
+    flex: 1.2;
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    background: linear-gradient(135deg, var(--color-accent-coral) 0%, var(--color-accent-purple) 100%);
+    border: 3px solid var(--color-accent-purple);
+    color: white;
+    border-radius: var(--border-radius-medium);
+    padding: 12px;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   Ruta Duolingo - Selector de Temas
+   -------------------------------------------------------------------------- */
+.topic-selector-container {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 25px;
+    background: var(--color-card-secondary);
+    padding: 6px;
+    border-radius: var(--border-radius-large);
+    border: 2px solid var(--color-border);
+}
+
+.topic-selector-btn {
+    flex: 1;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 12px;
+    font-size: 0.95rem;
+}
+
+.topic-selector-btn.active {
+    background: var(--color-card);
+    color: var(--color-text);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+}
+
+/* --------------------------------------------------------------------------
+   Camino Duolingo Vertical
+   -------------------------------------------------------------------------- */
+.topic-path-container {
+    animation: fadeIn 0.3s ease;
+}
+
+.path-section-header {
+    background: var(--color-card-secondary);
+    border-left: 6px solid var(--color-accent-blue);
+    padding: 15px 20px;
+    border-radius: var(--border-radius-medium);
+    margin-bottom: 30px;
+}
+
+.path-section-header.geometry-header { border-left-color: var(--color-accent-purple); }
+.path-section-header.reasoning-header { border-left-color: var(--color-accent-yellow); }
+
+.path-section-header h3 {
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    margin-bottom: 4px;
+}
+
+.path-section-header p {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+.duolingo-path {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    padding: 20px 0;
+    position: relative;
+}
+
+/* Línea conectora central de la ruta */
+.duolingo-path::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 8px;
+    background: var(--color-border);
+    border-radius: 4px;
+    z-index: 1;
+}
+
+.path-node {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: var(--color-card);
+    border: 5px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.1rem;
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 6px 0 var(--color-border);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.path-node:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 var(--color-border);
+}
+
+/* Desplazamiento en zig-zag */
+.node-pos-0 { transform: translateX(-40px); }
+.node-pos-0:active { transform: translateX(-40px) translateY(4px); }
+
+.node-pos-1 { transform: translateX(40px); }
+.node-pos-1:active { transform: translateX(40px) translateY(4px); }
+
+.node-pos-2 { transform: translateX(0); }
+.node-pos-2:active { transform: translateY(4px); }
+
+.node-pos-3 { transform: translateX(-40px); }
+.node-pos-3:active { transform: translateX(-40px) translateY(4px); }
+
+.node-pos-4 { transform: translateX(40px); }
+.node-pos-4:active { transform: translateX(40px) translateY(4px); }
+
+.node-pos-5 { transform: translateX(0); }
+.node-pos-5:active { transform: translateY(4px); }
+
+/* Temáticas de Nodos */
+.node-algebra {
+    border-color: var(--color-accent-blue);
+    box-shadow: 0 6px 0 #1d4ed8;
+}
+.node-geometry {
+    border-color: var(--color-accent-purple);
+    box-shadow: 0 6px 0 #6d28d9;
+}
+.node-reasoning {
+    border-color: var(--color-accent-yellow);
+    box-shadow: 0 6px 0 #b45309;
+}
+
+/* Nodo Bloqueado */
+.path-node.locked {
+    background: var(--color-card-secondary) !important;
+    border-color: var(--color-border) !important;
+    box-shadow: 0 6px 0 var(--color-card) !important;
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.path-node.locked .path-node-icon {
+    filter: grayscale(1) opacity(0.5);
+}
+
+.path-node-badge {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    background: var(--color-text);
+    color: var(--color-bg);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--color-border);
+}
+
+.path-node-tooltip {
+    position: absolute;
+    top: -35px;
+    background: #1e293b;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 4px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    border: 1.5px solid var(--color-border);
+}
+
+.path-node:hover .path-node-tooltip {
+    opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Tienda Premium
+   -------------------------------------------------------------------------- */
+.shop-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.shop-items-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.shop-item-card {
+    background: var(--color-card-secondary);
+    border: 3px solid var(--color-border);
+    border-radius: var(--border-radius-medium);
+    padding: 15px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.shop-item-card.equipped {
+    border-color: var(--color-accent-green);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+}
+
+.rarity-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 0.65rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 20px;
+}
+
+.rarity-badge.common { background: #64748b; color: white; }
+.rarity-badge.epic { background: var(--color-accent-purple); color: white; }
+.rarity-badge.legendary { background: var(--color-accent-yellow); color: #0f172a; }
+
+.shop-item-header {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.shop-item-icon {
+    font-size: 2.2rem;
+}
+
+.shop-item-info h4 {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    margin-bottom: 2px;
+}
+
+.shop-item-info p {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+.shop-item-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.shop-item-price {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 800;
+}
+
+/* --------------------------------------------------------------------------
+   Salón de Medallas / Logros
+   -------------------------------------------------------------------------- */
+.achievements-intro h3 {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    margin-bottom: 6px;
+}
+
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.achievement-card {
+    background: var(--color-card);
+    border: 3px solid var(--color-border);
+    border-radius: var(--border-radius-medium);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    box-shadow: var(--shadow-premium);
+}
+
+.achievement-card.locked {
+    opacity: 0.6;
+}
+
+.achievement-card.unlocked {
+    border-color: var(--color-accent-yellow);
+    box-shadow: 0 0 15px rgba(234, 179, 8, 0.15);
+}
+
+.achievement-icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: var(--color-card-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed var(--color-border);
+}
+
+.achievement-card.unlocked .achievement-icon {
+    background: linear-gradient(135deg, #fef08a 0%, #f59e0b 100%);
+    border-style: solid;
+    border-color: var(--color-accent-yellow);
+    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.25);
+}
+
+.achievement-card h4 {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    margin-bottom: 6px;
+}
+
+.achievement-card p {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin-bottom: 15px;
+    flex-grow: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Mateo AI Scanner
+   -------------------------------------------------------------------------- */
+.scanner-layout {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 20px;
+}
+
+.scanner-uploader h3, .scanner-results h3 {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    margin-bottom: 6px;
+}
+
+.image-drag-area {
+    border: 3px dashed var(--color-border);
+    border-radius: var(--border-radius-medium);
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    background: var(--color-canvas-bg);
+    min-height: 180px;
+    position: relative;
+    margin-top: 15px;
+}
+
+.upload-icon {
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+}
+
+.drag-text {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+#scanner-preview-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--border-radius-medium);
+    overflow: hidden;
+    background: var(--color-canvas-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#scanner-preview-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.btn-remove {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    border: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+/* Animación del Escaneo de IA */
+.scan-progress-bar-container {
+    margin-top: 15px;
+    background: var(--color-card-secondary);
+    border-radius: 12px;
+    padding: 10px;
+    position: relative;
+    overflow: hidden;
+    border: 1.5px solid var(--color-border);
+}
+
+.scan-progress-fill {
+    height: 10px;
+    background: var(--color-accent-coral);
+    border-radius: 5px;
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
+.scan-status {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--color-text-muted);
+    text-align: center;
+    margin-top: 5px;
+}
+
+.scan-laser {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: rgba(244, 63, 94, 0.85);
+    box-shadow: 0 0 10px rgba(244, 63, 94, 1);
+    z-index: 10;
+    animation: scanAnimation 2.2s linear infinite;
+}
+
+@keyframes scanAnimation {
+    0% { top: 0%; }
+    50% { top: 100%; }
+    100% { top: 0%; }
+}
+
+/* Presets Gallery */
+.preset-gallery {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    margin-bottom: 20px;
+}
+
+.preset-card {
+    flex: 1;
+    background: var(--color-card-secondary);
+    border: 2px solid var(--color-border);
+    border-radius: var(--border-radius-medium);
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.2s;
+}
+
+.preset-card:hover {
+    border-color: var(--color-accent-blue);
+    transform: translateY(-2px);
+}
+
+.preset-img-thumb {
+    font-size: 1.8rem;
+    margin-bottom: 4px;
+}
+
+.preset-card h4 {
+    font-family: var(--font-heading);
+    font-size: 0.9rem;
+}
+
+.preset-card p {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+}
+
+.scanner-result-output {
+    background: var(--color-canvas-bg);
+    border: 3px solid var(--color-accent-purple);
+    border-radius: var(--border-radius-medium);
+    padding: 15px;
+    margin-top: 15px;
+    animation: fadeIn 0.3s ease;
+}
+
+.ai-badge {
+    background: var(--color-accent-purple);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 900;
+    padding: 2px 6px;
+    border-radius: 20px;
+    margin-right: 8px;
+}
+
+.output-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.output-body {
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+/* --------------------------------------------------------------------------
+   Layout General de Juegos y Pantallas de Juego
+   -------------------------------------------------------------------------- */
+.game-layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 20px;
+}
+
+.game-sidebar {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 15px;
+}
+
+.game-sidebar h2 {
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+}
+
+.game-desc {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    line-height: 1.4;
+}
+
+.game-canvas-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-card);
+    min-height: 480px;
+    overflow: hidden;
+}
+
+.canvas-container {
+    position: relative;
+    border: 4px solid var(--color-border);
+    border-radius: var(--border-radius-medium);
+    overflow: hidden;
+    box-shadow: var(--shadow-premium);
+}
+
+.game-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 20px;
+    text-align: center;
+    color: white;
+}
+
+.overlay-content {
+    max-width: 320px;
+}
+
+.overlay-content h3 {
+    font-family: var(--font-heading);
+    font-size: 1.7rem;
+    margin-bottom: 8px;
+    color: var(--color-accent-blue);
+}
+
+.overlay-content p {
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    color: #e2e8f0;
+}
+
+.rules-explanation-box {
+    background: rgba(255,255,255,0.06);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: var(--border-radius-medium);
+    padding: 12px;
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.rules-explanation-box h4 {
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+    color: var(--color-accent-yellow);
+}
+
+.rules-explanation-box ul {
+    list-style: none;
+}
+
+.rules-explanation-box li {
+    font-size: 0.8rem;
+    line-height: 1.35;
+    margin-bottom: 6px;
+    position: relative;
+    padding-left: 14px;
+}
+
+.rules-explanation-box li::before {
+    content: '⭐';
+    position: absolute;
+    left: 0;
+    font-size: 0.7rem;
+}
+
+.lives-display-panel {
+    background: var(--color-card-secondary);
+    border: 2px solid var(--color-border);
+    padding: 10px;
+    border-radius: var(--border-radius-medium);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.equation-panel {
+    background: var(--color-card-secondary);
+    border: 2px solid var(--color-border);
+    padding: 12px;
+    border-radius: var(--border-radius-medium);
+}
+
+.equation-box {
+    background: var(--color-bg);
+    border: 2.5px solid var(--color-border);
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    text-align: center;
+    margin-top: 6px;
+}
+
+.touch-controller {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.touch-row {
+    display: flex;
+    gap: 8px;
+}
+
+.ctrl-btn {
+    width: 48px;
+    height: 48px;
+    border: 2.5px solid var(--color-border);
+    background: var(--color-card-secondary);
+    color: var(--color-text);
+    border-radius: var(--border-radius-medium);
+    font-size: 1.2rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+}
+
+.ctrl-btn:active {
+    background: var(--color-accent-blue);
+    color: white;
+}
+
+.ctrl-spacer {
+    width: 48px;
+}
+
+/* --------------------------------------------------------------------------
+   Sudoku 9x9 Grid Styles
+   -------------------------------------------------------------------------- */
+.sudoku-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+}
+
+.sudoku-board-9x9 {
+    display: grid;
+    grid-template-columns: repeat(9, minmax(28px, 42px));
+    grid-template-rows: repeat(9, minmax(28px, 42px));
+    gap: 2px;
+    background: var(--color-border);
+    padding: 4px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-premium);
+}
+
+.sudoku-cell {
+    background: var(--color-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.15rem;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    border-radius: 3px;
+    color: var(--color-text);
+}
+
+.sudoku-cell:hover {
+    background: var(--color-card-secondary);
+}
+
+/* Líneas gruesas de cuadrante 3x3 */
+.sudoku-cell[data-col="2"], .sudoku-cell[data-col="5"] {
+    margin-right: 4px;
+}
+
+.sudoku-cell[data-row="2"], .sudoku-cell[data-row="5"] {
+    margin-bottom: 4px;
+}
+
+/* Tipos de Celda */
+.cell-fixed {
+    background: var(--color-card-secondary);
+    color: var(--color-text-muted);
+    font-weight: 700;
+    cursor: not-allowed;
+}
+
+.cell-variable {
+    background: rgba(99, 102, 241, 0.12);
+    border: 2px solid rgba(99, 102, 241, 0.35);
+    color: var(--color-accent-purple);
+    font-size: 1rem;
+}
+
+.cell-selected {
+    background: rgba(59, 130, 246, 0.25) !important;
+    border: 2.5px solid var(--color-accent-blue) !important;
+}
+
+/* Teclado 9x9 */
+.sudoku-numpad-9x9 {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    width: 100%;
+    max-width: 380px;
+}
+
+.sudoku-numpad-9x9 .sudoku-num-btn {
+    border: 2px solid var(--color-border);
+    background: var(--color-card-secondary);
+    color: var(--color-text);
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.sudoku-numpad-9x9 .sudoku-num-btn:active {
+    background: var(--color-accent-blue);
+    color: white;
+}
+
+.btn-clear-9x9 {
+    grid-column: span 5;
+    background: var(--color-accent-coral) !important;
+    color: white !important;
+    border: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Barricade Cartesian Board Styles
+   -------------------------------------------------------------------------- */
+.barricade-container {
+    position: relative;
+    border: 4px solid var(--color-border);
+    border-radius: var(--border-radius-large);
+    background: var(--color-canvas-bg);
+    overflow: hidden;
+}
+
+.barricade-question-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(8px);
+    border-top: 3px solid var(--color-border);
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 60;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+.barricade-question-overlay h4 {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    color: var(--color-accent-yellow);
+    margin-bottom: 4px;
+}
+
+.barricade-question-overlay p {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.input-answer-container {
+    display: flex;
+    gap: 8px;
+}
+
+.manual-txt-input {
+    flex: 1;
+    background: var(--color-bg);
+    border: 2px solid var(--color-border);
+    color: var(--color-text);
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 800;
+    outline: none;
+}
+
+.manual-txt-input:focus {
+    border-color: var(--color-accent-blue);
+}
+
+/* Triángulo y Mini plano render */
+#geometry-render-canvas {
+    border-radius: 8px;
+    border: 1.5px solid var(--color-border);
+    background: var(--color-card-secondary);
+    margin-bottom: 8px;
+}
+
+/* --------------------------------------------------------------------------
+   Ahorcado (Hangman) Styles
+   -------------------------------------------------------------------------- */
+.ahorcado-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+}
+
+.ahorcado-word-display {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0;
+}
+
+.ahorcado-letter-slot {
+    width: 32px;
+    height: 38px;
+    border-bottom: 3.5px solid var(--color-border-glow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.ahorcado-keyboard {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 4px;
+    width: 100%;
+    max-width: 480px;
+}
+
+.ah-key {
+    background: var(--color-card-secondary);
+    border: 2px solid var(--color-border);
+    color: var(--color-text);
+    font-weight: 800;
+    font-size: 0.85rem;
+    padding: 8px 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+.ah-key:active {
+    background: var(--color-accent-blue);
+    color: white;
+}
+
+.ah-key.used {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+/* --------------------------------------------------------------------------
+   Modal Universal de Mateo
+   -------------------------------------------------------------------------- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 20px;
+}
+
+.modal-card {
+    background: var(--color-card);
+    border: 4px solid var(--color-border);
+    border-radius: var(--border-radius-large);
+    max-width: 420px;
+    width: 100%;
+    padding: 30px;
+    text-align: center;
+    box-shadow: var(--shadow-premium);
+    animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes scaleUp {
+    from { transform: scale(0.85); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.modal-mascot {
+    font-size: 3rem;
+    margin-bottom: 10px;
+}
+
+.modal-card h3 {
+    font-family: var(--font-heading);
+    font-size: 1.6rem;
+    margin-bottom: 12px;
+}
+
+.modal-body p {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    line-height: 1.4;
+    margin-bottom: 20px;
+}
+
+.modal-equation-box {
+    background: var(--color-bg);
+    border: 2.5px solid var(--color-border);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 1.4rem;
+    font-weight: 800;
+    font-family: var(--font-heading);
+    color: var(--color-accent-purple);
+    margin-bottom: 20px;
+}
+
+.modal-options-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.btn-option {
+    background: var(--color-card-secondary);
+    border: 2.5px solid var(--color-border);
+    color: var(--color-text);
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 800;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.btn-option:hover {
+    border-color: var(--color-accent-blue);
+}
+
+.modal-feedback {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-feedback.correct {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--color-accent-green);
+    border: 2px solid var(--color-accent-green);
+}
+
+.modal-feedback.wrong {
+    background: rgba(244, 63, 94, 0.12);
+    color: var(--color-accent-coral);
+    border: 2px solid var(--color-accent-coral);
+}
+
+/* Efecto de Sacudida por Error */
+.shake {
+    animation: shakeAnim 0.35s ease-in-out;
+}
+
+@keyframes shakeAnim {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+}
+
+/* --------------------------------------------------------------------------
+   Pantallas Táctiles / Responsividad
+   -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+    .game-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .scanner-layout {
+        grid-template-columns: 1fr;
+    }
+}
