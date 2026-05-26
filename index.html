@@ -1,957 +1,774 @@
 <!DOCTYPE html>
-<html lang="es" class="light">
+<html lang="es" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyFlow (Offline)</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Configuración de Tailwind para Modo Oscuro y Colores -->
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        // --- PALETA STUDYFLOW (Azul/Gris) ---
-                        primary: '#3A73B1', // Azul Principal (Botones)
-                        secondary: '#3B89BF', // Azul de Acento (Íconos, Highlights)
-                        darkBg: '#2D3A4F', // Azul Grisáceo Oscuro (Fondo Principal)
-                        darkCard: '#3A4B63', // Azul Grisáceo Medio (Tarjetas/Sidebar)
-                        pomodoro: '#E06C75' // Rojo suave para pomodoro
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- Iconos (Lucide) -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        body { transition: background-color 0.3s, color 0.3s; }
-        .note-card { transition: all 0.2s ease-in-out; }
-        .note-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .hide-scroll::-webkit-scrollbar { width: 8px; }
-        .hide-scroll::-webkit-scrollbar-track { background: transparent; }
-        /* Ajuste del scrollbar con nuevos colores */
-        .hide-scroll::-webkit-scrollbar-thumb { background-color: #A9A9A9; border-radius: 20px; }
-        .dark .hide-scroll::-webkit-scrollbar-thumb { background-color: #555555; }
-        
-        /* Animación para el reloj */
-        @keyframes pulse-soft {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        .colon-blink { animation: pulse-soft 1s infinite; }
-
-        /* Clase para el cursor de la calculadora */
-        .cursor-grab { cursor: grab; }
-        .cursor-grabbing { cursor: grabbing; }
-    </style>
+    <title>MathQuest V3 - ¡El Camino del Saber Matemático!</title>
+    <meta name="description" content="Aprende Álgebra, Geometría y Razonamiento Lógico con micro-retos y mecánicas de Duolingo y Brain Test para jóvenes de 10 a 15 años.">
+    
+    <!-- Google Fonts: Fredoka & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-[#EDEDED] text-gray-800 dark:bg-darkBg dark:text-gray-100 font-sans h-screen flex overflow-hidden">
+<body>
+    <!-- Capa de Confeti -->
+    <canvas id="confetti-canvas"></canvas>
 
-    <!-- SIDEBAR -->
-    <aside class="w-16 md:w-64 bg-white dark:bg-darkCard border-r border-gray-200 dark:border-gray-700 flex flex-col justify-between transition-all duration-300 z-20 shrink-0">
-        <div>
-            <!-- LOGO AREA -->
-            <div class="h-20 flex items-center justify-center md:justify-start md:px-6 border-b border-gray-200 dark:border-gray-700">
-                <!-- SVG Custom Logo -->
-                <svg class="w-10 h-10 shrink-0 rounded-xl shadow-sm transition-transform hover:scale-105" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <linearGradient id="logoGradient" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                            <stop stop-color="#3A73B1"/>
-                            <stop offset="1" stop-color="#2D3A4F"/>
-                        </linearGradient>
-                    </defs>
-                    <rect width="100" height="100" rx="25" fill="url(#logoGradient)"/>
-                    <circle cx="50" cy="45" r="25" stroke="white" stroke-width="8"/>
-                    <path d="M25 75 Q 50 85 75 75" stroke="white" stroke-width="0" fill="white" /> 
-                    <ellipse cx="50" cy="78" rx="28" ry="8" fill="white" />
-                </svg>
-                
-                <span class="hidden md:block ml-3 font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">StudyFlow</span>
-            </div>
-
-            <nav class="mt-6 flex flex-col gap-2 px-2">
-                <button onclick="app.navigate('notes')" id="nav-notes" class="flex items-center justify-center md:justify-start p-3 rounded-lg bg-primary/10 text-primary dark:text-white dark:bg-primary/20 transition-colors">
-                    <i data-lucide="sticky-note" class="w-6 h-6"></i>
-                    <span class="hidden md:block ml-3 font-medium">Mis Notas</span>
-                </button>
-                <button onclick="app.navigate('agenda')" id="nav-agenda" class="flex items-center justify-center md:justify-start p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors">
-                    <i data-lucide="calendar" class="w-6 h-6"></i>
-                    <span class="hidden md:block ml-3 font-medium">Agenda</span>
-                </button>
-                <button onclick="app.navigate('clock')" id="nav-clock" class="flex items-center justify-center md:justify-start p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors">
-                    <i data-lucide="clock" class="w-6 h-6"></i>
-                    <span class="hidden md:block ml-3 font-medium">Reloj & Foco</span>
-                </button>
-                <button onclick="app.navigate('settings')" id="nav-settings" class="flex items-center justify-center md:justify-start p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors">
-                    <i data-lucide="settings" class="w-6 h-6"></i>
-                    <span class="hidden md:block ml-3 font-medium">Ajustes</span>
-                </button>
-                
-                <button onclick="app.toggleCalculator()" class="flex items-center justify-center md:justify-start p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors mt-4 relative group">
-                    <i data-lucide="calculator" class="w-6 h-6 text-secondary"></i>
-                    <span class="hidden md:block ml-3 font-medium">Calculadora</span>
-                </button>
-            </nav>
+    <!-- Cabecera Superior Premium -->
+    <header class="app-header">
+        <button id="btn-back-menu" class="btn btn-secondary hidden">
+            ← Volver
+        </button>
+        <div class="logo" id="header-logo">
+            <span class="logo-emoji">📐</span>
+            <span class="logo-text">Math<span class="accent">Quest</span></span>
+            <span class="logo-version">V3</span>
         </div>
-
-        <div class="p-4 border-t border-gray-200 dark:border-gray-700">
-            <div class="hidden md:block text-center text-xs text-gray-400 p-2">
-                Modo Nativo (Offline)
+        <div class="user-stats">
+            <!-- Racha de Días -->
+            <div class="stat-pill streak-pill" title="Racha de Días Activos">
+                <span>🔥</span>
+                <span id="streak-count">1</span>
             </div>
-            <div class="md:hidden w-full flex justify-center items-center p-3 rounded-lg text-gray-400">
-                <i data-lucide="cloud-off" class="w-6 h-6"></i>
+            <!-- Estrellas -->
+            <div class="stat-pill stars-pill" title="Estrellas ganadas">
+                <span>⭐</span>
+                <span id="star-count">0</span>
+            </div>
+            <!-- MathCoins -->
+            <div class="stat-pill coins-pill" title="MathCoins (Monedas)">
+                <span>🪙</span>
+                <span id="coins-count">150</span>
+            </div>
+            <!-- Mochila de Pistas -->
+            <div class="stat-pill hints-pill" id="btn-global-hints-bag" title="Pistas Disponibles (Mochila)">
+                <span>💡</span>
+                <span id="global-hints-count">0</span>
+            </div>
+            <!-- Nivel / XP -->
+            <div class="stat-pill xp-pill" title="Nivel del Aventurero">
+                <span>⚡ Lvl</span>
+                <span id="user-level">1</span>
+            </div>
+            
+            <!-- Selector de Tema (Claro / Oscuro) -->
+            <button id="btn-theme-toggle" class="theme-toggle-btn" title="Cambiar Tema">
+                <span class="sun-icon">☀️</span>
+                <span class="moon-icon">🌙</span>
+            </button>
+            
+            <!-- Avatar y Medalla Equipada -->
+            <div class="avatar-header-container">
+                <div id="active-avatar-display" class="header-avatar"></div>
+                <div id="equipped-badge-display" class="badge-overlay" title="Medalla Activa"></div>
             </div>
         </div>
-    </aside>
+    </header>
 
-    <!-- MAIN CONTENT -->
-    <main class="flex-1 flex flex-col relative h-full overflow-hidden bg-[#EDEDED] dark:bg-darkBg">
+    <main class="app-container">
         
-        <header class="h-16 bg-white dark:bg-darkCard border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6 shrink-0">
-            <h1 id="page-title" class="text-xl md:text-2xl font-bold text-gray-800 dark:text-white truncate mr-4">Mis Notas</h1>
-            <div class="flex items-center gap-4 shrink-0">
-                <button onclick="app.toggleTheme()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <i id="theme-icon" data-lucide="moon" class="w-5 h-5"></i>
-                </button>
-                <button id="btn-new-main" onclick="app.handleNewButton()" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-md transition-transform active:scale-95">
-                    <i data-lucide="plus" class="w-4 h-4"></i>
-                    <span class="hidden sm:inline">Nuevo</span>
-                </button>
+        <!-- PANTALLA 1: HUB PRINCIPAL (Ruta Duolingo, Tienda, Logros y Escáner) -->
+        <section id="screen-hub" class="screen">
+            <!-- Banner de Bienvenida -->
+            <div class="welcome-banner card">
+                <div class="welcome-info">
+                    <h1>¡Bienvenido a MathQuest V3! 🚀</h1>
+                    <p>¡Elige tu tema favorito, desbloquea logros por mérito, compra pistas globales o escanea tu tarea escolar con IA!</p>
+                </div>
+                <div class="mateo-mascot-container">
+                    <div class="mateo-bubble" id="mateo-hub-bubble">¡Hola! Soy Mateo. ¡Elige un planeta!</div>
+                    <div class="mateo-avatar" id="mateo-hub-avatar">
+                        <!-- Custom SVG Mateo -->
+                        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <polygon points="50,15 15,85 85,85" fill="#FEF08A" stroke="#1A1A2E" stroke-width="4" stroke-linejoin="round"/>
+                            <circle cx="43" cy="58" r="7" fill="#FFFFFF" stroke="#1A1A2E" stroke-width="2"/>
+                            <circle cx="57" cy="58" r="7" fill="#FFFFFF" stroke="#1A1A2E" stroke-width="2"/>
+                            <circle cx="43" cy="58" r="3" fill="#1A1A2E"/>
+                            <circle cx="57" cy="58" r="3" fill="#1A1A2E"/>
+                            <circle cx="45" cy="56" r="1.5" fill="#FFFFFF"/>
+                            <circle cx="59" cy="56" r="1.5" fill="#FFFFFF"/>
+                            <path d="M47 70 Q50 73 53 70" stroke="#1A1A2E" stroke-width="3" fill="none" stroke-linecap="round"/>
+                            <polygon points="50,2 70,12 50,22 30,12" fill="#E9D5FF" stroke="#1A1A2E" stroke-width="3"/>
+                            <line x1="70" y1="12" x2="70" y2="25" stroke="#1A1A2E" stroke-width="3" stroke-linecap="round"/>
+                            <circle cx="70" cy="25" r="4" fill="#FED7AA" stroke="#1A1A2E" stroke-width="2"/>
+                        </svg>
+                    </div>
+                </div>
             </div>
-        </header>
 
-        <div id="content-area" class="flex-1 overflow-y-auto p-6 hide-scroll relative">
-            <!-- Vistas -->
-        </div>
+            <!-- Selector de Avatares Mágicos -->
+            <div class="avatar-selection-section card">
+                <h2>Elige tu avatar:</h2>
+                <div class="avatar-grid" id="avatar-picker">
+                    <div class="avatar-option" data-avatar="cubo" id="avatar-opt-cubo"></div>
+                    <div class="avatar-option" data-avatar="esfera" id="avatar-opt-esfera"></div>
+                    <div class="avatar-option" data-avatar="piramide" id="avatar-opt-piramide"></div>
+                    <div class="avatar-option" data-avatar="cilindro" id="avatar-opt-cilindro"></div>
+                </div>
+            </div>
+
+            <!-- Control de Pestañas del Hub (Camino vs Tienda vs Logros vs Escáner) -->
+            <div class="hub-tabs-container">
+                <button class="tab-btn active" id="tab-btn-path">🗺️ Camino</button>
+                <button class="tab-btn" id="tab-btn-shop">🪙 Tienda</button>
+                <button class="tab-btn" id="tab-btn-achievements">🏅 Logros y Medallas</button>
+                <button class="tab-btn-scanner" id="tab-btn-scanner">🤖 Escáner IA 📸</button>
+            </div>
+
+            <!-- SUB-PANTALLA A: EL CAMINO DE APRENDIZAJE DUOLINGO -->
+            <div id="hub-path-view" class="tab-view">
+                
+                <!-- Selector dinámico de temas dentro de la ruta -->
+                <div class="topic-selector-container">
+                    <button class="topic-selector-btn active" data-topic="algebra">🪐 Álgebra y Aritmética</button>
+                    <button class="topic-selector-btn" data-topic="geometry">📐 Geometría Mágica</button>
+                    <button class="topic-selector-btn" data-topic="logic">🧠 Razonamiento Matemático</button>
+                </div>
+
+                <!-- CONTENEDORES DE RUTAS POR TEMA -->
+                
+                <!-- 1. RUTA ÁLGEBRA Y ARITMÉTICA -->
+                <div id="path-topic-algebra" class="topic-path-container">
+                    <div class="path-section-header algebra-header">
+                        <h3>Planetario Algebraico: Ecuaciones, Exponentes y Fracciones</h3>
+                        <p>Completa los 6 niveles para ganar la medalla **Maestro del Álgebra** 🪐</p>
+                    </div>
+                    <div class="duolingo-path">
+                        <!-- Snake Lvl 1 -->
+                        <div class="path-node node-algebra node-pos-0" data-game="snake" data-level="1" title="Snake Algebraico - Nivel Fácil">
+                            <span class="path-node-icon">🐍</span>
+                            <span class="path-node-badge">1</span>
+                            <span class="path-node-tooltip">Nivel 1: Snake (Fácil)</span>
+                        </div>
+                        <!-- Snake Lvl 2 -->
+                        <div class="path-node node-algebra node-pos-1 locked" data-game="snake" data-level="2" title="Snake Algebraico - Nivel Medio">
+                            <span class="path-node-icon">🐍</span>
+                            <span class="path-node-badge">2</span>
+                            <span class="path-node-tooltip">Nivel 2: Snake (Medio)</span>
+                        </div>
+                        <!-- Snake Lvl 3 -->
+                        <div class="path-node node-algebra node-pos-2 locked" data-game="snake" data-level="3" title="Snake Algebraico - Nivel Difícil">
+                            <span class="path-node-icon">🐍</span>
+                            <span class="path-node-badge">3</span>
+                            <span class="path-node-tooltip">Nivel 3: Snake (Difícil)</span>
+                        </div>
+                        <!-- Slither Lvl 1 -->
+                        <div class="path-node node-algebra node-pos-3 locked" data-game="slider" data-level="1" title="Slither Fraccionario - Nivel Fácil">
+                            <span class="path-node-icon">🐛</span>
+                            <span class="path-node-badge">1</span>
+                            <span class="path-node-tooltip">Nivel 4: Slither-Math (Fácil)</span>
+                        </div>
+                        <!-- Slither Lvl 2 -->
+                        <div class="path-node node-algebra node-pos-4 locked" data-game="slider" data-level="2" title="Slither Fraccionario - Nivel Medio">
+                            <span class="path-node-icon">🐛</span>
+                            <span class="path-node-badge">2</span>
+                            <span class="path-node-tooltip">Nivel 5: Slither-Math (Medio)</span>
+                        </div>
+                        <!-- Slither Lvl 3 -->
+                        <div class="path-node node-algebra node-pos-5 locked" data-game="slider" data-level="3" title="Slither Fraccionario - Nivel Difícil">
+                            <span class="path-node-icon">🐛</span>
+                            <span class="path-node-badge">3</span>
+                            <span class="path-node-tooltip">Nivel 6: Slither-Math (Difícil)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. RUTA GEOMETRÍA MÁGICA -->
+                <div id="path-topic-geometry" class="topic-path-container hidden">
+                    <div class="path-section-header geometry-header">
+                        <h3>Plano de Construcción: Ángulos, Planos y Pitágoras</h3>
+                        <p>Completa los 6 niveles para ganar la medalla **Pro de la Geometría** 📐</p>
+                    </div>
+                    <div class="duolingo-path">
+                        <!-- Tetris Lvl 1 -->
+                        <div class="path-node node-geometry node-pos-0" data-game="tetris" data-level="1" title="Math-Tetris - Nivel Fácil">
+                            <span class="path-node-icon">🧱</span>
+                            <span class="path-node-badge">1</span>
+                            <span class="path-node-tooltip">Nivel 1: Tetris Ángulos (Fácil)</span>
+                        </div>
+                        <!-- Tetris Lvl 2 -->
+                        <div class="path-node node-geometry node-pos-1 locked" data-game="tetris" data-level="2" title="Math-Tetris - Nivel Medio">
+                            <span class="path-node-icon">🧱</span>
+                            <span class="path-node-badge">2</span>
+                            <span class="path-node-tooltip">Nivel 2: Tetris Ángulos (Medio)</span>
+                        </div>
+                        <!-- Tetris Lvl 3 -->
+                        <div class="path-node node-geometry node-pos-2 locked" data-game="tetris" data-level="3" title="Math-Tetris - Nivel Difícil">
+                            <span class="path-node-icon">🧱</span>
+                            <span class="path-node-badge">3</span>
+                            <span class="path-node-tooltip">Nivel 3: Tetris Ángulos (Difícil)</span>
+                        </div>
+                        <!-- Barricade Lvl 1 -->
+                        <div class="path-node node-geometry node-pos-3 locked" data-game="barricade" data-level="1" title="Barricada Cartesiana - Nivel Fácil">
+                            <span class="path-node-icon">🛡️</span>
+                            <span class="path-node-badge">1</span>
+                            <span class="path-node-tooltip">Nivel 4: Barricada Cartesiana (Fácil)</span>
+                        </div>
+                        <!-- Barricade Lvl 2 -->
+                        <div class="path-node node-geometry node-pos-4 locked" data-game="barricade" data-level="2" title="Barricada Cartesiana - Nivel Medio">
+                            <span class="path-node-icon">🛡️</span>
+                            <span class="path-node-badge">2</span>
+                            <span class="path-node-tooltip">Nivel 5: Barricada Cartesiana (Medio)</span>
+                        </div>
+                        <!-- Barricade Lvl 3 -->
+                        <div class="path-node node-geometry node-pos-5 locked" data-game="barricade" data-level="3" title="Barricada Cartesiana - Nivel Difícil">
+                            <span class="path-node-icon">🛡️</span>
+                            <span class="path-node-badge">3</span>
+                            <span class="path-node-tooltip">Nivel 6: Barricada Cartesiana (Difícil)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. RUTA RAZONAMIENTO MATEMÁTICO -->
+                <div id="path-topic-logic" class="topic-path-container hidden">
+                    <div class="path-section-header reasoning-header">
+                        <h3>Templo de la Lógica: Sodocu 9x9 y Enigmas</h3>
+                        <p>Completa los 6 niveles para ganar la medalla **Mago de la Lógica** 🧠</p>
+                    </div>
+                    <div class="duolingo-path">
+                        <!-- Sudoku Lvl 1 -->
+                        <div class="path-node node-reasoning node-pos-0" data-game="sudoku" data-level="1" title="Sodocu 9x9 - Nivel Fácil">
+                            <span class="path-node-icon">🔢</span>
+                            <span class="path-node-badge">1</span>
+                            <span class="path-node-tooltip">Nivel 1: Sodocu 9x9 (Fácil)</span>
+                        </div>
+                        <!-- Sudoku Lvl 2 -->
+                        <div class="path-node node-reasoning node-pos-1 locked" data-game="sudoku" data-level="2" title="Sodocu 9x9 - Nivel Medio">
+                            <span class="path-node-icon">🔢</span>
+                            <span class="path-node-badge">2</span>
+                            <span class="path-node-tooltip">Nivel 2: Sodocu 9x9 (Medio)</span>
+                        </div>
+                        <!-- Sudoku Lvl 3 -->
+                        <div class="path-node node-reasoning node-pos-2 locked" data-game="sudoku" data-level="3" title="Sodocu 9x9 - Nivel Difícil">
+                            <span class="path-node-icon">🔢</span>
+                            <span class="path-node-badge">3</span>
+                            <span class="path-node-tooltip">Nivel 3: Sodocu 9x9 (Difícil)</span>
+                        </div>
+                        <!-- Ahorcado Lvl 1 -->
+                        <div class="path-node node-reasoning node-pos-3 locked" data-game="ahorcado" data-level="1" title="Ahorcado - Nivel Fácil">
+                            <span class="path-node-icon">🪓</span>
+                            <span class="path-node-badge">1</span>
+                            <span class="path-node-tooltip">Nivel 4: Ahorcado Matemático (Fácil)</span>
+                        </div>
+                        <!-- Ahorcado Lvl 2 -->
+                        <div class="path-node node-reasoning node-pos-4 locked" data-game="ahorcado" data-level="2" title="Ahorcado - Nivel Medio">
+                            <span class="path-node-icon">🪓</span>
+                            <span class="path-node-badge">2</span>
+                            <span class="path-node-tooltip">Nivel 5: Ahorcado Matemático (Medio)</span>
+                        </div>
+                        <!-- Ahorcado Lvl 3 -->
+                        <div class="path-node node-reasoning node-pos-5 locked" data-game="ahorcado" data-level="3" title="Ahorcado - Nivel Difícil">
+                            <span class="path-node-icon">🪓</span>
+                            <span class="path-node-badge">3</span>
+                            <span class="path-node-tooltip">Nivel 6: Ahorcado Matemático (Difícil)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-PANTALLA B: LA TIENDA DE ARTÍCULOS -->
+            <div id="hub-shop-view" class="tab-view hidden">
+                <div class="shop-grid">
+                    <!-- Sección de Skins -->
+                    <div class="shop-category card">
+                        <h3>🐍 Skins de Serpiente (Snake / Slither)</h3>
+                        <div class="shop-items-container" id="shop-container-skins">
+                            <!-- Inyectado dinámicamente -->
+                        </div>
+                    </div>
+                    
+                    <!-- Sección de Potenciadores -->
+                    <div class="shop-category card">
+                        <h3>⚡ Pistas Universales 💡</h3>
+                        <div class="shop-items-container" id="shop-container-powerups">
+                            <!-- Inyectado dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-PANTALLA C: LOGROS Y MEDALLAS DE HONOR -->
+            <div id="hub-achievements-view" class="tab-view hidden">
+                <div class="card achievements-intro">
+                    <h3>🏆 Salón de Medallas de Honor</h3>
+                    <p>Las medallas no se pueden comprar con monedas. Debes demostrar tu conocimiento superando la ruta de retos para desbloquearlas de forma permanente y equiparlas al lado de tu perfil.</p>
+                </div>
+                <div class="achievements-grid" id="achievements-container">
+                    <!-- Inyectado dinámicamente por JS -->
+                </div>
+            </div>
+
+            <!-- SUB-PANTALLA D: ESCÁNER IA DE MATEO -->
+            <div id="hub-scanner-view" class="tab-view hidden">
+                <div class="scanner-layout">
+                    <div class="scanner-uploader card">
+                        <h3>🤖 Escáner de Tareas y Retos IA</h3>
+                        <p class="game-desc">¿Tienes un problema de matemáticas difícil en tu cuaderno? Toma una foto y súbela para que Mateo IA lo analice, te explique el tema y cree un juego personalizado adaptado para que lo domines.</p>
+                        
+                        <!-- Caja de Carga Interactiva -->
+                        <div class="image-drag-area" id="image-drag-area">
+                            <span class="upload-icon">📸</span>
+                            <p class="drag-text">Arrastra tu foto matemática aquí o haz clic para subir</p>
+                            <input type="file" id="scanner-file-input" accept="image/*" class="hidden">
+                            
+                            <!-- Visualizador de Imagen Cargada -->
+                            <div id="scanner-preview-container" class="hidden">
+                                <img id="scanner-preview-img" src="" alt="Problema Matemático">
+                                <button id="btn-remove-photo" class="btn-remove">✕</button>
+                            </div>
+                        </div>
+
+                        <!-- Barra de Escaneo de IA -->
+                        <div class="scan-progress-bar-container hidden" id="scan-progress-box">
+                            <div class="scan-laser"></div>
+                            <div class="scan-progress-fill" id="scan-progress-bar"></div>
+                            <div class="scan-status" id="scan-status-text">Analizando números...</div>
+                        </div>
+
+                        <button id="btn-run-scanner" class="btn btn-primary btn-large w-100" style="margin-top: 15px;">🔍 Analizar Problema</button>
+                    </div>
+
+                    <div class="scanner-results card">
+                        <h3>⚡ Problemas Recomendados y Presets</h3>
+                        <p class="game-desc">O selecciona un problema matemático típico de la galería de presets para probar la simulación del análisis de Mateo IA de forma instantánea:</p>
+                        
+                        <!-- Galería de Presets -->
+                        <div class="preset-gallery">
+                            <div class="preset-card" data-preset="equation">
+                                <div class="preset-img-thumb">➗</div>
+                                <h4>Álgebra</h4>
+                                <p>Ecuación: `3x - 5 = 10`</p>
+                            </div>
+                            <div class="preset-card" data-preset="pythagoras">
+                                <div class="preset-img-thumb">📐</div>
+                                <h4>Geometría</h4>
+                                <p>Triángulo con catetos: `6` y `8`</p>
+                            </div>
+                            <div class="preset-card" data-preset="fractions">
+                                <div class="preset-img-thumb">🍕</div>
+                                <h4>Aritmética</h4>
+                                <p>Fracción circular de: `2/3`</p>
+                            </div>
+                        </div>
+
+                        <!-- Resultado de Análisis -->
+                        <div id="scanner-output-card" class="scanner-result-output hidden">
+                            <div class="output-header">
+                                <span class="ai-badge">🤖 Mateo AI</span>
+                                <h4>Análisis Completo:</h4>
+                            </div>
+                            <div class="output-body" id="scanner-output-text">
+                                <!-- Inyectado dinámicamente -->
+                            </div>
+                            <button id="btn-play-custom-game" class="btn btn-accent w-100" style="margin-top: 15px;">🎯 ¡Jugar Partida Personalizada!</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PANTALLA 2: JUEGO 1 - MATH SNAKE -->
+        <section id="screen-snake" class="screen hidden">
+            <div class="game-layout">
+                <div class="game-sidebar card">
+                    <h2>🐍 Ecuación-Snake</h2>
+                    <p class="game-desc" id="snake-game-instruction">Resuelve la ecuación comiendo la manzana correcta. ¡Cuidado con el cuerpo y los bordes!</p>
+                    
+                    <div class="lives-display-panel">
+                        <span class="panel-label">Vidas Restantes:</span>
+                        <div class="hearts-container" id="snake-hearts-box">
+                            ❤️ ❤️ ❤️
+                        </div>
+                    </div>
+
+                    <div class="equation-panel">
+                        <span class="equation-label" id="snake-lbl-prompt">Halla el valor de x:</span>
+                        <div id="snake-equation" class="equation-box">2x + 5 = 11</div>
+                    </div>
+                    
+                    <div class="game-stats-row">
+                        <div class="stat-pill stars-pill">
+                            <span>Puntos:</span>
+                            <strong id="snake-score">0</strong>
+                        </div>
+                    </div>
+
+                    <!-- Botón para usar pista en Snake -->
+                    <button id="btn-use-hint-snake" class="btn btn-secondary w-100 btn-use-hint">
+                        💡 Usar Pista (Mochila)
+                    </button>
+                    
+                    <button id="btn-restart-snake" class="btn btn-accent w-100" style="margin-top: 10px;">Reiniciar</button>
+                </div>
+
+                <div class="game-canvas-area card">
+                    <div class="canvas-container">
+                        <div id="snake-overlay" class="game-overlay">
+                            <div class="overlay-content">
+                                <h3 id="snake-overlay-title">Álgebra Snake 🍏</h3>
+                                <div id="snake-overlay-instructions" class="rules-explanation-box">
+                                    <h4>📜 Reglas del Juego:</h4>
+                                    <ul>
+                                        <li>💡 Se te mostrará una **ecuación** matemática en el panel lateral.</li>
+                                        <li>🍏 Tres manzanas con respuestas aparecerán en el tablero.</li>
+                                        <li>🐍 Controla la serpiente para comer la **manzana correcta**.</li>
+                                        <li>💥 Chocar contra los muros o comer la manzana errónea resta **1 vida**.</li>
+                                    </ul>
+                                </div>
+                                <p id="snake-overlay-text">Presiona empezar para jugar al nivel seleccionado.</p>
+                                <button id="btn-start-snake-game" class="btn btn-primary btn-large">¡Empezar!</button>
+                            </div>
+                        </div>
+                        <canvas id="snake-canvas" width="400" height="400"></canvas>
+                    </div>
+
+                    <!-- Mandos táctiles en pantalla -->
+                    <div class="touch-controller">
+                        <div class="touch-row">
+                            <button id="ctrl-up" class="ctrl-btn">▲</button>
+                        </div>
+                        <div class="touch-row">
+                            <button id="ctrl-left" class="ctrl-btn">◀</button>
+                            <div class="ctrl-spacer"></div>
+                            <button id="ctrl-right" class="ctrl-btn">▶</button>
+                        </div>
+                        <div class="touch-row">
+                            <button id="ctrl-down" class="ctrl-btn">▼</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PANTALLA 3: JUEGO 2 - MATH TETRIS -->
+        <section id="screen-tetris" class="screen hidden">
+            <div class="game-layout">
+                <div class="game-sidebar card">
+                    <h2>🧱 Math-Tetris (Ángulos)</h2>
+                    <p class="game-desc">Alinea los bloques de ángulos. Si un bloque cae sobre otro y su suma da el objetivo, se fusionan y eliminan.</p>
+                    
+                    <div class="target-angle-panel">
+                        <span class="panel-label">Meta Geométrica:</span>
+                        <div id="tetris-target-desc" class="equation-box" style="font-size: 1.25rem; background: var(--color-mint); color: var(--color-dark);">
+                            Suma 180° (Suplementario)
+                        </div>
+                    </div>
+
+                    <div class="stat-pill stars-pill">
+                        <span>Puntos:</span>
+                        <strong id="tetris-score">0</strong>
+                    </div>
+
+                    <!-- Botón para usar pista en Tetris -->
+                    <button id="btn-use-hint-tetris" class="btn btn-secondary w-100 btn-use-hint" style="margin-top: 10px;">
+                        💡 Usar Pista (Mochila)
+                    </button>
+                    
+                    <button id="btn-restart-tetris" class="btn btn-accent w-100" style="margin-top: 10px;">Reiniciar Partida</button>
+                </div>
+
+                <div class="game-canvas-area card">
+                    <div class="canvas-container">
+                        <div id="tetris-overlay" class="game-overlay">
+                            <div class="overlay-content">
+                                <h3 id="tetris-overlay-title">Suma de Ángulos 🧱</h3>
+                                <div id="tetris-overlay-instructions" class="rules-explanation-box">
+                                    <h4>📜 Reglas de Math-Tetris:</h4>
+                                    <ul>
+                                        <li>🎯 En el panel lateral verás una **meta angular** (ej: 90° o 180°).</li>
+                                        <li>🧱 Caen bloques con diferentes ángulos (`30°`, `45°`, `60°`, etc.).</li>
+                                        <li>📥 Apila un bloque encima de otro de modo que la suma de ambos ángulos coincida con la meta.</li>
+                                        <li>💥 Si sumas correctamente, se fusionan y obtienes **+15 Monedas y Estrellas**.</li>
+                                    </ul>
+                                </div>
+                                <p id="tetris-overlay-text">Consigue que los bloques que caen se alineen para que la suma sea la meta.</p>
+                                <button id="btn-start-tetris-game" class="btn btn-primary btn-large">¡A Stackear!</button>
+                            </div>
+                        </div>
+                        <canvas id="tetris-canvas" width="300" height="450"></canvas>
+                    </div>
+
+                    <!-- Botones móviles Tetris -->
+                    <div class="touch-controller">
+                        <div class="touch-row">
+                            <button id="ctrl-tetris-left" class="ctrl-btn">◀</button>
+                            <button id="ctrl-tetris-rotate" class="ctrl-btn">💡 Pista</button>
+                            <button id="ctrl-tetris-right" class="ctrl-btn">▶</button>
+                        </div>
+                        <div class="touch-row">
+                            <button id="ctrl-tetris-down" class="ctrl-btn">▼</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PANTALLA 4: JUEGO 3 - SLITHER MATH -->
+        <section id="screen-slider" class="screen hidden">
+            <div class="game-layout">
+                <div class="game-sidebar card">
+                    <h2>🐛 Slither-Fracciones</h2>
+                    <p class="game-desc">Controla al gusano en la arena espacial. Devora globos de fracciones equivalentes al objetivo para crecer.</p>
+                    
+                    <div class="equation-panel">
+                        <span class="equation-label">Fracción Objetivo:</span>
+                        <div id="slider-target-equation" class="equation-box">3 / 4</div>
+                    </div>
+                    
+                    <div class="stat-pill stars-pill">
+                        <span>Largo:</span>
+                        <strong id="slider-score">0</strong>
+                    </div>
+
+                    <!-- Botón para usar pista en Slither -->
+                    <button id="btn-use-hint-slider" class="btn btn-secondary w-100 btn-use-hint" style="margin-top: 10px;">
+                        💡 Usar Pista (Mochila)
+                    </button>
+
+                    <button id="btn-restart-slider" class="btn btn-accent w-100" style="margin-top: 10px;">Reiniciar Arena</button>
+                </div>
+
+                <div class="game-canvas-area card">
+                    <div class="canvas-container">
+                        <div id="slider-overlay" class="game-overlay">
+                            <div class="overlay-content">
+                                <h3 id="slider-overlay-title">Gusano Equivalente 🐛</h3>
+                                <div id="slider-overlay-instructions" class="rules-explanation-box">
+                                    <h4>📜 Reglas de Slither-Fracciones:</h4>
+                                    <ul>
+                                        <li>🎯 Tu objetivo es comer únicamente globos con **fracciones equivalentes** a la diana.</li>
+                                        <li>🐛 Mueve tu ratón o arrastra tu dedo; el gusano tiene **movimiento constante**.</li>
+                                        <li>⚡ Haz **click o mantén presionado** para ganar velocidad (Boost), pero esto consume masa de tu cola.</li>
+                                        <li>💀 Chocar contra la cola de los oponentes IA causa el fin del juego.</li>
+                                    </ul>
+                                </div>
+                                <p id="slider-overlay-text">Come solo fracciones equivalentes a la diana. ¡Esquiva los oponentes!</p>
+                                <button id="btn-start-slider-game" class="btn btn-primary btn-large">¡Entrar!</button>
+                            </div>
+                        </div>
+                        <canvas id="slider-canvas" width="500" height="400"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PANTALLA 5: JUEGO 4 - BARRICADE (BARRICADA GEOMÉTRICA) -->
+        <section id="screen-barricade" class="screen hidden">
+            <div class="game-layout">
+                <div class="game-sidebar card">
+                    <h2>🛡️ Barricada Cartesiana</h2>
+                    <p class="game-desc">Avanza por el mapa hacia el castillo. Entra las coordenadas de la barricada o resuelve la distancia para desbloquearla.</p>
+                    
+                    <div class="stat-pill stars-pill">
+                        <span>Paso Actual:</span>
+                        <strong id="barricade-score">0</strong> / 5
+                    </div>
+
+                    <!-- Botón para usar pista en Barricade -->
+                    <button id="btn-use-hint-barricade" class="btn btn-secondary w-100 btn-use-hint" style="margin-top: 10px;">
+                        💡 Usar Pista (Mochila)
+                    </button>
+
+                    <button id="btn-restart-barricade" class="btn btn-accent w-100" style="margin-top: 10px;">Reiniciar Tablero</button>
+                </div>
+
+                <div class="game-canvas-area card" style="position:relative;">
+                    <div class="barricade-container">
+                        <div id="barricade-overlay" class="game-overlay">
+                            <div class="overlay-content">
+                                <h3>Barricadas del Plano 🏰</h3>
+                                <div id="barricade-overlay-instructions" class="rules-explanation-box">
+                                    <h4>📜 Reglas de Barricada:</h4>
+                                    <ul>
+                                        <li>🗺️ Tu ficha empieza al inicio. Haz clic en los nodos consecutivos para avanzar.</li>
+                                        <li>🛡️ Los nodos rojos son **barricadas**. Haz clic en ellas para iniciar el reto.</li>
+                                        <li>📝 Introduce las coordenadas del punto `(x, y)` o resuelve la hipotenusa en el mini-plano.</li>
+                                        <li>🏰 ¡Alcanza el Castillo superando todas las barricadas para ganar!</li>
+                                    </ul>
+                                </div>
+                                <button id="btn-start-barricade-game" class="btn btn-primary btn-large">¡Empezar!</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Canvas principal del tablero -->
+                        <canvas id="barricade-board-canvas" width="400" height="300"></canvas>
+
+                        <!-- Pregunta Interactiva de Barricada -->
+                        <div id="barricade-question-box" class="barricade-question-overlay hidden">
+                            <h4 id="barricade-q-title">🔓 ¡Desafío de la Barricada!</h4>
+                            <p id="barricade-q-desc">Introduce las coordenadas en el formato (x,y) o calcula la hipotenusa del triángulo:</p>
+                            
+                            <!-- Canvas para figuras geométricas y planos cartesianos -->
+                            <canvas id="geometry-render-canvas" width="220" height="150"></canvas>
+                            
+                            <!-- Entrada Manual de Texto para Coordenadas/Vectores -->
+                            <div class="input-answer-container" id="barricade-input-area" style="display:none; margin: 10px 0; width: 100%;">
+                                <input type="text" id="barricade-manual-input" placeholder="Ej: (2, -3) o valor numérico" class="manual-txt-input">
+                                <button id="btn-submit-barricade-input" class="btn btn-primary">Validar</button>
+                            </div>
+                            
+                            <!-- Botones en grid alternativos para opciones clásicas -->
+                            <div class="modal-options-grid w-100" id="barricade-options-container">
+                                <!-- Botones inyectados dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PANTALLA 6: JUEGO 5 - MATH SUDOKU (SODOCU 9x9) -->
+        <section id="screen-sudoku" class="screen hidden">
+            <div class="game-layout">
+                <div class="game-sidebar card">
+                    <h2>🔢 Sodocu Algebraico 9x9</h2>
+                    <p class="game-desc" id="sudoku-instruction-text">Resuelve los valores algebraicos de las variables en el panel, y luego rellena la cuadrícula de Sudoku 9x9 sin repetir filas, columnas o cuadrantes de 3x3.</p>
+                    
+                    <div class="equation-panel">
+                        <span class="equation-label">Sistemas Claves:</span>
+                        <div id="sudoku-clues-box" class="equation-box" style="font-size: 1rem; line-height: 1.4; text-align: left; background: var(--color-bg); font-family: monospace;">
+                            a + b = 9<br>
+                            b = 4<br>
+                            c = b * 2 - 3<br>
+                            d = a * 2 - b<br>
+                            e = d - c + 1
+                        </div>
+                    </div>
+
+                    <!-- Botón para usar pista en Sudoku -->
+                    <button id="btn-use-hint-sudoku" class="btn btn-secondary w-100 btn-use-hint" style="margin-bottom: 10px;">
+                        💡 Usar Pista (Mochila)
+                    </button>
+
+                    <button id="btn-restart-sudoku" class="btn btn-accent w-100">Reiniciar</button>
+                </div>
+
+                <div class="game-canvas-area card">
+                    <div class="sudoku-container">
+                        <div id="sudoku-overlay" class="game-overlay">
+                            <div class="overlay-content">
+                                <h3>Sodocu 9x9 de Variables 🔢</h3>
+                                <div id="sudoku-overlay-instructions" class="rules-explanation-box">
+                                    <h4>📜 Reglas de Sodocu 9x9:</h4>
+                                    <ul>
+                                        <li>🧮 Primero, resuelve las ecuaciones del panel para descifrar el valor de las letras (`a, b, c, d, e`).</li>
+                                        <li>📋 Selecciona casillas con letras en la cuadrícula e ingresa sus valores correctos.</li>
+                                        <li>🔢 Rellena el resto de casillas vacías con números del **1 al 9**.</li>
+                                        <li>🚫 No repitas números en una misma fila, columna o cuadrante de **3x3**.</li>
+                                    </ul>
+                                </div>
+                                <button id="btn-start-sudoku-game" class="btn btn-primary btn-large">¡Resolver!</button>
+                            </div>
+                        </div>
+
+                        <!-- Tablero de Sudoku 9x9 -->
+                        <div class="sudoku-board-9x9" id="sudoku-board-grid"></div>
+
+                        <!-- Teclado Numérico 1-9 -->
+                        <div class="sudoku-numpad-9x9">
+                            <button class="sudoku-num-btn" data-num="1">1</button>
+                            <button class="sudoku-num-btn" data-num="2">2</button>
+                            <button class="sudoku-num-btn" data-num="3">3</button>
+                            <button class="sudoku-num-btn" data-num="4">4</button>
+                            <button class="sudoku-num-btn" data-num="5">5</button>
+                            <button class="sudoku-num-btn" data-num="6">6</button>
+                            <button class="sudoku-num-btn" data-num="7">7</button>
+                            <button class="sudoku-num-btn" data-num="8">8</button>
+                            <button class="sudoku-num-btn" data-num="9">9</button>
+                            <button class="sudoku-num-btn btn-clear-9x9" id="btn-sudoku-clear">Borrar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PANTALLA 7: JUEGO 6 - EL AHORCADO -->
+        <section id="screen-ahorcado" class="screen hidden">
+            <div class="game-layout">
+                <div class="game-sidebar card">
+                    <h2>🪓 Ahorcado de Conceptos</h2>
+                    <p class="game-desc">Adivina la palabra geométrica o algebraica con la ayuda de la adivinanza de Mateo.</p>
+                    
+                    <div class="equation-panel">
+                        <span class="equation-label">Riddle / Adivinanza:</span>
+                        <div id="ahorcado-hint" class="equation-box" style="font-size: 1.05rem; line-height: 1.4; max-height: 140px; overflow-y: auto;">
+                            Cargando adivinanza...
+                        </div>
+                    </div>
+
+                    <!-- Botón para usar pista en Ahorcado -->
+                    <button id="btn-use-hint-ahorcado" class="btn btn-secondary w-100 btn-use-hint" style="margin-bottom: 10px;">
+                        💡 Usar Pista (Mochila)
+                    </button>
+
+                    <div class="stat-pill stars-pill">
+                        <span>Vidas:</span>
+                        <strong id="ahorcado-lives">6</strong> / 6
+                    </div>
+                    
+                    <button id="btn-restart-ahorcado" class="btn btn-accent w-100">Siguiente Concepto</button>
+                </div>
+
+                <div class="game-canvas-area card">
+                    <div class="ahorcado-container">
+                        <div id="ahorcado-overlay" class="game-overlay">
+                            <div class="overlay-content">
+                                <h3>Hangman de Secundaria 🪓</h3>
+                                <div id="ahorcado-overlay-instructions" class="rules-explanation-box">
+                                    <h4>📜 Reglas de Ahorcado:</h4>
+                                    <ul>
+                                        <li>📝 Lee con cuidado el acertijo matemático en el panel.</li>
+                                        <li>🔤 Selecciona letras en el teclado para completar la palabra secreta.</li>
+                                        <li>💥 Cada letra incorrecta dibuja una parte del ahorcado y resta **1 vida** (de 6).</li>
+                                        <li>💡 Puedes comprar pistas o presionar usar pista para revelar letras de inmediato.</li>
+                                    </ul>
+                                </div>
+                                <button id="btn-start-ahorcado-game" class="btn btn-primary btn-large">¡Iniciar Ahorcado!</button>
+                            </div>
+                        </div>
+
+                        <!-- Canvas de Horca -->
+                        <canvas id="ahorcado-canvas" width="200" height="150"></canvas>
+
+                        <!-- Slots -->
+                        <div class="ahorcado-word-display" id="ahorcado-word-slots"></div>
+
+                        <!-- Teclado -->
+                        <div class="ahorcado-keyboard" id="ahorcado-virtual-keyboard"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
     </main>
 
-    <!-- TOAST NOTIFICATION -->
-    <div id="toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-800 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-full shadow-2xl z-[70] hidden transition-all duration-300 flex items-center gap-3 w-max max-w-[90%]">
-        <i data-lucide="info" class="w-5 h-5 flex-shrink-0" id="toast-icon"></i>
-        <span id="toast-message" class="font-medium truncate">Mensaje</span>
-    </div>
-
-    <!-- MODALES -->
-
-    <!-- Modal Crear/Editar Nota -->
-    <div id="modal-note" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm p-4">
-        <div class="bg-white dark:bg-darkCard w-full max-w-lg rounded-2xl shadow-2xl p-6 transform transition-all scale-100 flex flex-col max-h-[85vh]">
-            <div class="flex justify-between items-center mb-4">
-                <h3 id="modal-note-title" class="text-xl font-bold dark:text-white">Nueva Nota</h3>
-                <button onclick="app.closeModal('note')" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
-            </div>
-            
-            <input type="text" id="note-title" placeholder="Título de la nota" class="w-full mb-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
-            
-            <textarea id="note-body" class="w-full flex-1 min-h-[150px] p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary resize-none mb-4" placeholder="Escribe aquí..."></textarea>
-            
-            <div class="flex justify-end items-center">
-                <button onclick="app.saveNote()" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition font-medium shadow-lg hover:shadow-primary/30">Guardar</button>
+    <!-- Modal General de Diálogos con Mateo / Desafíos de Potenciadores -->
+    <div id="math-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-mascot" id="modal-mascot-emoji">💡</div>
+            <h3 id="modal-title">¡Desafío Rápido!</h3>
+            <div class="modal-body">
+                <p id="modal-equation-prompt">Resuelve el acertijo algebraico:</p>
+                <div id="modal-equation" class="modal-equation-box">8 - 3 = ?</div>
+                
+                <div class="modal-options-grid" id="modal-options">
+                    <!-- Botones dinámicos de respuestas múltiples -->
+                </div>
+                <div id="modal-feedback" class="modal-feedback hidden"></div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Agenda -->
-    <div id="modal-agenda" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm p-4">
-        <div class="bg-white dark:bg-darkCard w-full max-w-md rounded-2xl shadow-2xl p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold dark:text-white">Nuevo Evento</h3>
-                <button onclick="app.closeModal('agenda')" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"><i data-lucide="x" class="w-6 h-6"></i></button>
-            </div>
-            <input type="text" id="event-title" placeholder="Nombre del evento" class="w-full mb-4 p-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-secondary">
-            <input type="datetime-local" id="event-date" class="w-full mb-4 p-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-secondary">
-            <button onclick="app.saveEvent()" class="w-full bg-secondary text-white px-6 py-2 rounded-lg hover:bg-secondary/90 transition font-medium">Agendar</button>
-        </div>
-    </div>
-
-    <!-- Modal Calculadora Movible -->
-    <!-- Se agrega estilo 'cursor-grab' al header para indicar movible -->
-    <div id="modal-calculator" class="fixed bottom-20 right-4 sm:bottom-10 sm:right-10 bg-white dark:bg-darkCard rounded-2xl shadow-2xl z-40 hidden w-64 overflow-hidden border border-gray-200 dark:border-gray-700 transition-opacity">
-        <div class="bg-gray-100 dark:bg-gray-800 p-3 flex justify-between items-center cursor-grab select-none active:cursor-grabbing" id="calc-header">
-            <span class="font-bold text-sm dark:text-white flex items-center gap-2 pointer-events-none"><i data-lucide="calculator" class="w-3 h-3"></i> Calculadora</span>
-            <button onclick="app.toggleCalculator()" class="text-red-500 hover:bg-red-100 rounded p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
-        </div>
-        <div class="p-4">
-            <input type="text" id="calc-display" readonly class="w-full mb-3 text-right text-2xl font-mono bg-transparent dark:text-white border-b border-gray-300 outline-none" value="0">
-            <div class="grid grid-cols-4 gap-2">
-                <button onclick="calc.clear()" class="col-span-3 bg-red-100 text-red-600 p-2 rounded hover:bg-red-200 font-bold">C</button>
-                <button onclick="calc.op('/')" class="bg-gray-200 dark:bg-gray-700 dark:text-white p-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600">÷</button>
-                <button onclick="calc.add(7)" class="bg-gray-50 dark:bg-gray-600 dark:text-white p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-500">7</button>
-                <button onclick="calc.add(8)" class="bg-gray-50 dark:bg-gray-600 dark:text-white p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-500">8</button>
-                <button onclick="calc.add(9)" class="bg-gray-50 dark:bg-gray-600 dark:text-white p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-500">9</button>
-                <button onclick="calc.op('*')" class="bg-gray-200 dark:bg-gray-700 dark:text-white p-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600">×</button>
-                <button onclick="calc.add(4)" class="bg-gray-50 dark:bg-gray-600 dark:text-white p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-500">4</button>
-                <button onclick="calc.add(5)" class="bg-gray-50 dark:bg-gray-600 dark:text-white p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-500">5</button>
-                <button onclick="calc.add(6)" class="bg-gray-50 dark:bg-gray-600 dark:text-white p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-500">6</button>
-                <button onclick="calc.op('-')" class="bg-gray-200 dark:bg-gray-700 dark:text-white p-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600">-</button>
-                <button onclick="calc.add(1)" class="bg-gray-50 dark:bg-gray-600 dark:text-white p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-500">1</button>
-                <button onclick="calc.add(2)" class="bg-gray-50 dark:bg-gray-600 dark:text-white p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-500">2</button>
-                <button onclick="calc.add(3)" class="bg-gray-50 dark:bg-gray-600 dark:text-white p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-500">3</button>
-                <button onclick="calc.op('+')" class="bg-gray-200 dark:bg-gray-700 dark:text-white p-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600">+</button>
-                <button onclick="calc.add(0)" class="col-span-2 bg-gray-50 dark:bg-gray-600 dark:text-white p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-500">0</button>
-                <button onclick="calc.add('.')" class="bg-gray-50 dark:bg-gray-600 dark:text-white p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-500">.</button>
-                <button onclick="calc.eq()" class="bg-primary text-white p-2 rounded shadow hover:bg-primary/90">=</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Confirmación de Borrado -->
-    <div id="modal-confirm" class="fixed inset-0 bg-black/50 z-[60] hidden flex items-center justify-center backdrop-blur-sm p-4">
-        <div class="bg-white dark:bg-darkCard w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center transform transition-all scale-100">
-            <div class="mx-auto w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4 text-red-600 dark:text-red-400">
-                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
-            </div>
-            <h3 class="text-xl font-bold dark:text-white mb-2">¿Estás seguro?</h3>
-            <p class="text-gray-500 dark:text-gray-400 mb-6">Esta acción eliminará el elemento permanentemente.</p>
-            <div class="flex gap-3 justify-center">
-                <button onclick="app.closeModal('confirm')" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition">Cancelar</button>
-                <button onclick="app.executeDelete()" class="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition shadow-lg">Eliminar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- SCRIPTS -->
-    <script>
-        lucide.createIcons();
-
-        // ------------------ CALCULADORA LÓGICA & DRAG ------------------
-        const calc = {
-            current: '0', prev: null, operation: null,
-            isDragging: false,
-            startX: 0, startY: 0,
-            initialLeft: 0, initialTop: 0,
-
-            initDrag() {
-                const header = document.getElementById('calc-header');
-                const modal = document.getElementById('modal-calculator');
-
-                header.addEventListener('mousedown', (e) => {
-                    // Evitar drag si se clickea el boton cerrar
-                    if(e.target.closest('button')) return;
-                    
-                    this.isDragging = true;
-                    this.startX = e.clientX;
-                    this.startY = e.clientY;
-                    
-                    const rect = modal.getBoundingClientRect();
-                    this.initialLeft = rect.left;
-                    this.initialTop = rect.top;
-                    
-                    // Remover clases de posicionamiento fijo para permitir movimiento libre
-                    modal.style.bottom = 'auto';
-                    modal.style.right = 'auto';
-                    modal.style.left = `${this.initialLeft}px`;
-                    modal.style.top = `${this.initialTop}px`;
-                    
-                    header.classList.add('cursor-grabbing');
-                });
-
-                document.addEventListener('mousemove', (e) => {
-                    if (!this.isDragging) return;
-                    e.preventDefault();
-                    const dx = e.clientX - this.startX;
-                    const dy = e.clientY - this.startY;
-                    modal.style.left = `${this.initialLeft + dx}px`;
-                    modal.style.top = `${this.initialTop + dy}px`;
-                });
-
-                document.addEventListener('mouseup', () => {
-                    this.isDragging = false;
-                    header.classList.remove('cursor-grabbing');
-                });
-            },
-
-            add(n) { 
-                if (this.current === '0' && n !== '.') this.current = ''; 
-                this.current += n.toString(); 
-                this.update(); 
-            },
-            op(op) { 
-                this.prev = this.current; 
-                this.current = '0'; 
-                this.operation = op; 
-            },
-            eq() {
-                if (!this.prev || !this.operation) return;
-                const prev = parseFloat(this.prev), curr = parseFloat(this.current);
-                let res = 0;
-                switch(this.operation) {
-                    case '+': res = prev + curr; break; 
-                    case '-': res = prev - curr; break;
-                    case '*': res = prev * curr; break; 
-                    case '/': 
-                        if (curr === 0) {
-                            app.showToast("¡No se puede dividir por cero!", "error");
-                            this.clear();
-                            return;
-                        }
-                        res = prev / curr; 
-                        break;
-                }
-                this.current = parseFloat(res.toFixed(8)).toString(); 
-                this.operation = null; 
-                this.prev = null; 
-                this.update();
-            },
-            clear() { 
-                this.current = '0'; 
-                this.prev = null; 
-                this.operation = null; 
-                this.update(); 
-            },
-            update() { 
-                const display = document.getElementById('calc-display');
-                if(display) display.value = this.current; 
-            }
-        };
-
-        // ------------------ LÓGICA PRINCIPAL DE LA APLICACIÓN ------------------
-        const app = {
-            data: {
-                notes: JSON.parse(localStorage.getItem('notes')) || [],
-                events: JSON.parse(localStorage.getItem('events')) || [],
-                settings: JSON.parse(localStorage.getItem('settings')) || { theme: 'light', fontSize: 'normal' },
-                isPremium: localStorage.getItem('isPremium') === 'true' || false, 
-            },
-            currentView: 'notes',
-            pendingDelete: null,
-            activeIntervals: [], 
-            currentNoteId: null, // Para edición de notas
-            
-            clockState: {
-                stopwatch: { time: 0, running: false, interval: null },
-                pomodoro: { time: 25 * 60, running: false, interval: null, initial: 25 * 60 }
-            },
-
-            init() {
-                this.applyTheme();
-                this.render();
-                calc.initDrag(); // Iniciar lógica de arrastre
-            },
-
-            // --- UI HELPERS ---
-            showToast(message, type = 'info') {
-                const toast = document.getElementById('toast');
-                const msg = document.getElementById('toast-message');
-                const icon = document.getElementById('toast-icon');
-
-                msg.innerText = message;
-                toast.classList.remove('hidden', 'bg-red-500', 'bg-green-500'); 
-                toast.classList.add('bg-gray-800', 'dark:bg-white'); 
-                
-                if (type === 'error') {
-                    icon.setAttribute('data-lucide', 'alert-circle');
-                    toast.classList.remove('bg-gray-800', 'dark:bg-white');
-                    toast.classList.add('bg-red-500');
-                } else if (type === 'success') {
-                    icon.setAttribute('data-lucide', 'check-circle');
-                    toast.classList.remove('bg-gray-800', 'dark:bg-white');
-                    toast.classList.add('bg-green-500');
-                } else {
-                    icon.setAttribute('data-lucide', 'info');
-                }
-                lucide.createIcons();
-                toast.classList.remove('hidden');
-
-                setTimeout(() => {
-                    toast.classList.add('hidden');
-                }, 3000);
-            },
-
-            // --- NAVEGACIÓN Y RENDER ---
-            clearIntervals() {
-                this.activeIntervals.forEach(i => clearInterval(i));
-                this.activeIntervals = [];
-            },
-
-            navigate(view) {
-                this.currentView = view;
-                this.clearIntervals(); 
-                
-                document.querySelectorAll('nav button').forEach(btn => {
-                    if(btn.id.startsWith('nav-')) {
-                        btn.classList.remove('bg-primary/10', 'text-primary', 'dark:bg-primary/20', 'dark:text-white');
-                        btn.classList.add('hover:bg-gray-100', 'dark:hover:bg-gray-700', 'text-gray-600', 'dark:text-gray-300');
-                    }
-                });
-                const navId = `nav-${view}`;
-                const btn = document.getElementById(navId);
-                if(btn) {
-                    btn.classList.remove('hover:bg-gray-100', 'dark:hover:bg-gray-700', 'text-gray-600', 'dark:text-gray-300');
-                    btn.classList.add('bg-primary/10', 'text-primary', 'dark:text-white', 'dark:bg-primary/20');
-                }
-
-                const titles = { notes: 'Mis Notas', agenda: 'Agenda Personal', settings: 'Ajustes', clock: 'Reloj & Foco' };
-                document.getElementById('page-title').innerText = titles[view];
-                
-                const btnNew = document.getElementById('btn-new-main');
-                if (view === 'settings' || view === 'clock') {
-                    btnNew.classList.add('hidden');
-                } else {
-                    btnNew.classList.remove('hidden');
-                }
-
-                this.render();
-            },
-            
-            handleNewButton() {
-                if(this.currentView === 'notes') this.openNoteModal(); 
-                if(this.currentView === 'agenda') this.openModal('agenda');
-            },
-
-            render() {
-                const container = document.getElementById('content-area');
-                container.innerHTML = '';
-                if (this.currentView === 'notes') this.renderNotes(container);
-                else if (this.currentView === 'agenda') this.renderAgenda(container);
-                else if (this.currentView === 'settings') this.renderSettings(container);
-                else if (this.currentView === 'clock') this.renderClock(container);
-                lucide.createIcons();
-            },
-
-            // --- VISTAS ESPECÍFICAS ---
-
-            renderNotes(container) {
-                if (this.data.notes.length === 0) {
-                    container.innerHTML = `
-                        <div class="flex flex-col items-center justify-center h-full text-gray-400">
-                            <i data-lucide="notebook" class="w-16 h-16 mb-4 opacity-50"></i>
-                            <p>No tienes notas. ¡Crea una!</p>
-                        </div>`;
-                    return;
-                }
-
-                const grid = document.createElement('div');
-                grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-20'; 
-                const sortedNotes = [...this.data.notes].reverse();
-
-                sortedNotes.forEach((note) => {
-                    const fontSizeClass = this.data.settings.fontSize === 'large' ? 'text-lg' : 'text-base';
-                    const card = document.createElement('div');
-                    // Se agrega onclick para abrir el editor
-                    card.className = `note-card bg-white dark:bg-darkCard p-5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col overflow-hidden group h-64 cursor-pointer hover:border-primary/50 transition-colors`;
-                    card.onclick = (e) => {
-                        // Evitar que el clic en el botón de borrar dispare la edición
-                        if(e.target.closest('.delete-btn')) return;
-                        this.openNoteModal(note.id);
-                    };
-
-                    card.innerHTML = `
-                        <h3 class="font-bold text-lg mb-2 dark:text-gray-100 line-clamp-1">${note.title}</h3>
-                        <div class="flex-1 overflow-hidden relative pointer-events-none">
-                            <p class="${fontSizeClass} text-gray-600 dark:text-gray-400 whitespace-pre-line line-clamp-6 mb-4">${note.body}</p>
-                            <div class="absolute bottom-0 left-0 w-full h-8 bg-gradient-to-t from-white dark:from-darkCard to-transparent"></div>
-                        </div>
-                        <div class="flex justify-between items-center mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
-                            <span class="text-xs text-gray-400">${new Date(note.date).toLocaleDateString()}</span>
-                            <button onclick="app.deleteNote(${note.id})" class="delete-btn text-red-400 hover:text-red-600 p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors z-10"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                        </div>
-                    `;
-                    grid.appendChild(card);
-                });
-                container.appendChild(grid);
-            },
-
-            renderAgenda(container) {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'max-w-3xl mx-auto pb-20 space-y-8';
-
-                // 1. Calendario
-                const calendarSection = document.createElement('div');
-                calendarSection.className = 'bg-white dark:bg-darkCard rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6';
-                
-                const now = new Date();
-                const monthName = now.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
-                const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-                const firstDayIndex = new Date(now.getFullYear(), now.getMonth(), 1).getDay(); // 0 = Domingo
-                
-                let calendarHTML = `
-                    <h3 class="text-lg font-bold dark:text-white capitalize mb-4 text-center">${monthName}</h3>
-                    <div class="grid grid-cols-7 gap-1 text-center mb-2">
-                        <div class="text-xs font-bold text-gray-400">D</div>
-                        <div class="text-xs font-bold text-gray-400">L</div>
-                        <div class="text-xs font-bold text-gray-400">M</div>
-                        <div class="text-xs font-bold text-gray-400">X</div>
-                        <div class="text-xs font-bold text-gray-400">J</div>
-                        <div class="text-xs font-bold text-gray-400">V</div>
-                        <div class="text-xs font-bold text-gray-400">S</div>
-                    </div>
-                    <div class="grid grid-cols-7 gap-1">
-                `;
-
-                for (let i = 0; i < firstDayIndex; i++) {
-                    calendarHTML += `<div></div>`;
-                }
-
-                for (let d = 1; d <= daysInMonth; d++) {
-                    const currentDate = new Date(now.getFullYear(), now.getMonth(), d);
-                    // Formato YYYY-MM-DD para el input type="datetime-local"
-                    // Ajuste de zona horaria simple
-                    const year = now.getFullYear();
-                    const month = String(now.getMonth() + 1).padStart(2, '0');
-                    const day = String(d).padStart(2, '0');
-                    const dateString = `${year}-${month}-${day}T09:00`; // Hora por defecto 9am
-
-                    const isToday = d === now.getDate();
-                    
-                    const hasEvent = this.data.events.some(e => {
-                        const eDate = new Date(e.date);
-                        return eDate.getDate() === d && eDate.getMonth() === now.getMonth() && eDate.getFullYear() === now.getFullYear();
-                    });
-
-                    let classes = "h-8 w-8 mx-auto flex items-center justify-center rounded-full text-sm transition-colors cursor-pointer ";
-                    if (isToday) {
-                        classes += "bg-primary text-white font-bold hover:opacity-80";
-                    } else {
-                        classes += "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700";
-                    }
-
-                    // Se agrega el evento onclick para abrir modal con fecha
-                    calendarHTML += `
-                        <div class="relative" onclick="app.openModalWithDate('${dateString}')">
-                            <div class="${classes}">${d}</div>
-                            ${hasEvent ? `<span class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-secondary rounded-full"></span>` : ''}
-                        </div>
-                    `;
-                }
-                calendarHTML += `</div>`;
-                calendarSection.innerHTML = calendarHTML;
-                wrapper.appendChild(calendarSection);
-
-                // 2. Lista de Eventos
-                if (this.data.events.length === 0) {
-                    const empty = document.createElement('div');
-                    empty.className = "flex flex-col items-center justify-center py-10 text-gray-400";
-                    empty.innerHTML = `
-                        <i data-lucide="calendar-clock" class="w-12 h-12 mb-2 opacity-50"></i>
-                        <p>No hay eventos próximos.</p>
-                        <button onclick="app.openModal('agenda')" class="mt-2 text-primary text-sm font-bold hover:underline">Añadir Evento</button>
-                    `;
-                    wrapper.appendChild(empty);
-                } else {
-                    const list = document.createElement('div');
-                    list.className = 'space-y-4';
-                    const sortedEvents = this.data.events.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-                    sortedEvents.forEach(evt => {
-                        const dateObj = new Date(evt.date);
-                        const item = document.createElement('div');
-                        item.className = 'flex items-center bg-white dark:bg-darkCard p-4 rounded-xl shadow-sm border-l-4 border-secondary';
-                        item.innerHTML = `
-                            <div class="mr-4 text-center min-w-[60px]">
-                                <div class="text-xs font-bold text-gray-400 uppercase">${dateObj.toLocaleDateString('es-ES', { month: 'short' })}</div>
-                                <div class="text-2xl font-bold text-gray-800 dark:text-white">${dateObj.getDate()}</div>
-                            </div>
-                            <div class="flex-1">
-                                <h4 class="font-bold text-lg dark:text-white">${evt.title}</h4>
-                                <p class="text-sm text-gray-500">${dateObj.toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'})} • ${dateObj.getFullYear()}</p>
-                            </div>
-                            <button onclick="app.deleteEvent(${evt.id})" class="text-gray-400 hover:text-red-500 p-2"><i data-lucide="x-circle" class="w-5 h-5"></i></button>
-                        `;
-                        list.appendChild(item);
-                    });
-                    wrapper.appendChild(list);
-                }
-
-                container.appendChild(wrapper);
-            },
-
-            renderClock(container) {
-                container.innerHTML = `
-                    <div class="max-w-4xl mx-auto space-y-6 pb-20">
-                        <!-- Reloj Grande -->
-                        <div class="bg-white dark:bg-darkCard rounded-2xl shadow-sm p-8 text-center border border-gray-100 dark:border-gray-700">
-                            <h2 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Hora Actual</h2>
-                            <div id="clock-display" class="text-5xl md:text-7xl font-mono font-bold text-gray-800 dark:text-white tabular-nums tracking-tight">
-                                --:--:--
-                            </div>
-                            <div id="date-display" class="text-lg text-secondary mt-2 font-medium">--</div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Cronómetro -->
-                            <div class="bg-white dark:bg-darkCard rounded-2xl shadow-sm p-6 border border-gray-100 dark:border-gray-700 flex flex-col items-center">
-                                <div class="flex items-center gap-2 mb-4 text-gray-500 dark:text-gray-400">
-                                    <i data-lucide="timer" class="w-5 h-5"></i>
-                                    <span class="font-bold uppercase text-xs tracking-wider">Cronómetro</span>
-                                </div>
-                                <div id="stopwatch-display" class="text-4xl font-mono font-bold text-gray-800 dark:text-white mb-6 tabular-nums">
-                                    00:00:00
-                                </div>
-                                <div class="flex gap-3 w-full">
-                                    <button onclick="app.toggleStopwatch()" id="btn-sw-toggle" class="flex-1 bg-primary text-white py-2 rounded-lg font-medium hover:bg-primary/90 transition">Iniciar</button>
-                                    <button onclick="app.resetStopwatch()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition">
-                                        <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Pomodoro -->
-                            <div class="bg-white dark:bg-darkCard rounded-2xl shadow-sm p-6 border border-gray-100 dark:border-gray-700 flex flex-col items-center relative overflow-hidden">
-                                ${!this.data.isPremium ? `
-                                    <div class="absolute inset-0 bg-white/60 dark:bg-darkCard/80 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-4 text-center">
-                                        <div class="bg-secondary text-white p-3 rounded-full mb-3 shadow-lg">
-                                            <i data-lucide="lock" class="w-6 h-6"></i>
-                                        </div>
-                                        <h3 class="font-bold text-gray-800 dark:text-white">Función Premium</h3>
-                                        <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Desbloquea el Reloj Pomodoro para maximizar tu enfoque.</p>
-                                        <button onclick="app.navigate('settings')" class="text-primary font-bold hover:underline text-sm">Ir a Ajustes</button>
-                                    </div>
-                                ` : ''}
-                                
-                                <div class="flex items-center gap-2 mb-4 text-pomodoro">
-                                    <i data-lucide="hourglass" class="w-5 h-5"></i>
-                                    <span class="font-bold uppercase text-xs tracking-wider">Pomodoro (25m)</span>
-                                </div>
-                                <div id="pomodoro-display" class="text-4xl font-mono font-bold text-gray-800 dark:text-white mb-6 tabular-nums">
-                                    25:00
-                                </div>
-                                <div class="flex gap-3 w-full">
-                                    <button onclick="app.togglePomodoro()" id="btn-pomo-toggle" class="flex-1 bg-pomodoro text-white py-2 rounded-lg font-medium hover:opacity-90 transition">Iniciar</button>
-                                    <button onclick="app.resetPomodoro()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition">
-                                        <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                this.updateClockUI();
-                const clockInterval = setInterval(() => this.updateClockUI(), 1000);
-                this.activeIntervals.push(clockInterval);
-
-                this.updateStopwatchUI();
-                this.updatePomodoroUI();
-            },
-
-            renderSettings(container) {
-                container.innerHTML = `
-                    <div class="max-w-2xl mx-auto bg-white dark:bg-darkCard rounded-xl shadow p-8 pb-20">
-                        <h2 class="text-xl font-bold mb-6 dark:text-white">Preferencias</h2>
-                        
-                        <!-- Tema -->
-                        <div class="flex items-center justify-between py-4 border-b border-gray-100 dark:border-gray-700">
-                            <div><p class="font-medium dark:text-white">Modo Oscuro</p><p class="text-sm text-gray-500">Alternar tema de la aplicación</p></div>
-                            <button onclick="app.toggleTheme()" class="w-12 h-6 rounded-full bg-gray-200 dark:bg-primary relative transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:ring-offset-darkCard">
-                                <span class="absolute top-1 left-1 bg-white w-4 h-4 rounded-full shadow transform transition-transform ${this.data.settings.theme === 'dark' ? 'translate-x-6' : ''}"></span>
-                            </button>
-                        </div>
-                        
-                        <!-- Tamaño de Fuente -->
-                        <div class="py-4 border-b border-gray-100 dark:border-gray-700">
-                            <p class="font-medium dark:text-white mb-2">Tamaño de Fuente en Notas</p>
-                            <div class="flex gap-4">
-                                <button onclick="app.setFontSize('normal')" class="px-4 py-2 rounded border transition-colors ${this.data.settings.fontSize === 'normal' ? 'bg-primary text-white border-primary shadow' : 'border-gray-300 text-gray-600 dark:border-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}">Normal</button>
-                                <button onclick="app.setFontSize('large')" class="px-4 py-2 rounded border transition-colors ${this.data.settings.fontSize === 'large' ? 'bg-primary text-white border-primary shadow' : 'border-gray-300 text-gray-600 dark:border-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}">Grande</button>
-                            </div>
-                        </div>
-
-                        <!-- Estado Premium -->
-                        <div class="py-4 border-b border-gray-100 dark:border-gray-700">
-                            <p class="font-medium dark:text-white mb-2">Estado Premium</p>
-                            ${this.data.isPremium ? `
-                                <div class="bg-primary/20 dark:bg-primary/40 p-4 rounded-lg flex justify-between items-center text-primary dark:text-blue-200 font-medium">
-                                    <div class="flex items-center">
-                                        <i data-lucide="gem" class="w-5 h-5 mr-2"></i>
-                                        <span>Premium Activo.</span>
-                                    </div>
-                                    <span class="text-xs opacity-75">(Offline)</span>
-                                </div>
-                            ` : `
-                                <div class="bg-secondary/10 dark:bg-secondary/30 p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center text-secondary dark:text-blue-300 font-medium gap-3">
-                                    <div>
-                                        <p class="font-bold">Desbloquea funciones extra:</p>
-                                        <ul class="text-sm list-disc list-inside opacity-80">
-                                            <li>Reloj Pomodoro</li>
-                                            <li>Soporte Prioritario (Simulado)</li>
-                                        </ul>
-                                    </div>
-                                    <button onclick="app.activateTrial()" class="bg-primary text-white px-4 py-2 text-sm rounded-lg hover:bg-primary/90 transition shadow whitespace-nowrap">Obtener Premium</button>
-                                </div>
-                            `}
-                        </div>
-                        
-                        <!-- Estado de Conexión -->
-                        <div class="py-4">
-                            <p class="font-medium dark:text-white mb-2">Estado de Conexión</p>
-                            <div class="bg-green-100 dark:bg-green-900/30 p-4 rounded-lg flex justify-between items-center text-green-600 dark:text-green-300 font-medium">
-                                <div class="flex items-center">
-                                    <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
-                                    Aplicación 100% Offline
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-8 text-center text-xs text-gray-400">Datos guardados localmente en su navegador (LocalStorage).</div>
-                    </div>
-                `;
-            },
-
-            // --- DATA LOGIC ---
-            // Modificación: Soporte para editar
-            openNoteModal(id = null) {
-                this.currentNoteId = id;
-                const modalTitle = document.getElementById('modal-note-title');
-                const titleInput = document.getElementById('note-title');
-                const bodyInput = document.getElementById('note-body');
-
-                if (id) {
-                    const note = this.data.notes.find(n => n.id === id);
-                    if (note) {
-                        modalTitle.innerText = "Editar Nota";
-                        titleInput.value = note.title;
-                        bodyInput.value = note.body;
-                    }
-                } else {
-                    modalTitle.innerText = "Nueva Nota";
-                    titleInput.value = '';
-                    bodyInput.value = '';
-                }
-                this.openModal('note');
-            },
-
-            saveNote() {
-                const title = document.getElementById('note-title').value;
-                const body = document.getElementById('note-body').value;
-
-                if (!title && !body) {
-                    this.showToast('La nota no puede estar vacía.', 'error');
-                    return;
-                }
-
-                if (this.currentNoteId) {
-                    // Editar existente
-                    const index = this.data.notes.findIndex(n => n.id === this.currentNoteId);
-                    if (index !== -1) {
-                        this.data.notes[index].title = title || 'Sin Título';
-                        this.data.notes[index].body = body;
-                        this.data.notes[index].date = new Date(); // Actualizar fecha
-                        this.showToast('Nota actualizada', 'success');
-                    }
-                } else {
-                    // Crear nueva
-                    const newNote = { id: Date.now(), title: title || 'Sin Título', body: body, date: new Date() };
-                    this.data.notes.push(newNote);
-                    this.showToast('Nota creada', 'success');
-                }
-
-                this.saveToStorage();
-                this.closeModal('note');
-                this.render();
-                this.currentNoteId = null; // Reset
-            },
-
-            deleteNote(id) {
-                this.pendingDelete = { type: 'note', id: id };
-                this.openModal('confirm');
-            },
-            
-            deleteEvent(id) {
-                this.pendingDelete = { type: 'event', id: id };
-                this.openModal('confirm');
-            },
-
-            executeDelete() {
-                if (!this.pendingDelete) return;
-                
-                const { type, id } = this.pendingDelete;
-                
-                if (type === 'note') {
-                    this.data.notes = this.data.notes.filter(n => n.id !== id);
-                    this.showToast('Nota eliminada', 'success');
-                } else if (type === 'event') {
-                    this.data.events = this.data.events.filter(e => e.id !== id);
-                    this.showToast('Evento eliminado', 'success');
-                }
-                
-                this.saveToStorage();
-                this.render();
-                this.closeModal('confirm');
-                this.pendingDelete = null;
-            },
-            
-            // Nueva función para abrir modal desde calendario
-            openModalWithDate(dateString) {
-                document.getElementById('event-date').value = dateString;
-                this.openModal('agenda');
-            },
-            
-            saveEvent() {
-                const title = document.getElementById('event-title').value;
-                const date = document.getElementById('event-date').value;
-                if (!title || !date) return this.showToast('Completa los campos de título y fecha', 'error');
-                this.data.events.push({ id: Date.now(), title, date });
-                this.saveToStorage();
-                this.closeModal('agenda');
-                // Limpiar campos
-                document.getElementById('event-title').value = '';
-                document.getElementById('event-date').value = '';
-                
-                this.showToast('Evento agendado', 'success');
-                this.navigate('agenda');
-            },
-
-            // --- FUNCIONES RELOJ / CRONOMETRO ---
-            updateClockUI() {
-                const clockDisplay = document.getElementById('clock-display');
-                const dateDisplay = document.getElementById('date-display');
-                if(!clockDisplay) return;
-
-                const now = new Date();
-                const hours = String(now.getHours()).padStart(2, '0');
-                const minutes = String(now.getMinutes()).padStart(2, '0');
-                const seconds = String(now.getSeconds()).padStart(2, '0');
-                
-                clockDisplay.innerHTML = `${hours}<span class="colon-blink">:</span>${minutes}<span class="colon-blink">:</span>${seconds}`;
-                dateDisplay.innerText = now.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            },
-
-            toggleStopwatch() {
-                const sw = this.clockState.stopwatch;
-                if (sw.running) {
-                    clearInterval(sw.interval);
-                    sw.running = false;
-                } else {
-                    const startTime = Date.now() - sw.time;
-                    sw.interval = setInterval(() => {
-                        sw.time = Date.now() - startTime;
-                        this.updateStopwatchUI();
-                    }, 100); 
-                    sw.running = true;
-                    this.activeIntervals.push(sw.interval); 
-                }
-                this.updateStopwatchUI();
-            },
-
-            resetStopwatch() {
-                const sw = this.clockState.stopwatch;
-                clearInterval(sw.interval);
-                sw.running = false;
-                sw.time = 0;
-                this.updateStopwatchUI();
-            },
-
-            updateStopwatchUI() {
-                const display = document.getElementById('stopwatch-display');
-                const btn = document.getElementById('btn-sw-toggle');
-                if(!display) return;
-
-                const sw = this.clockState.stopwatch;
-                const time = new Date(sw.time);
-                const m = String(time.getUTCMinutes()).padStart(2, '0');
-                const s = String(time.getUTCSeconds()).padStart(2, '0');
-                const ms = String(Math.floor(time.getUTCMilliseconds() / 10)).padStart(2, '0');
-
-                display.innerText = `${m}:${s}:${ms}`;
-                btn.innerText = sw.running ? 'Pausar' : 'Iniciar';
-                btn.className = sw.running 
-                    ? 'flex-1 bg-yellow-500 text-white py-2 rounded-lg font-medium hover:bg-yellow-600 transition'
-                    : 'flex-1 bg-primary text-white py-2 rounded-lg font-medium hover:bg-primary/90 transition';
-            },
-
-            togglePomodoro() {
-                if(!this.data.isPremium) return;
-                const pomo = this.clockState.pomodoro;
-                
-                if (pomo.running) {
-                    clearInterval(pomo.interval);
-                    pomo.running = false;
-                } else {
-                    pomo.interval = setInterval(() => {
-                        if (pomo.time > 0) {
-                            pomo.time--;
-                            this.updatePomodoroUI();
-                        } else {
-                            clearInterval(pomo.interval);
-                            pomo.running = false;
-                            this.showToast('¡Tiempo Pomodoro completado!', 'success');
-                            this.updatePomodoroUI();
-                        }
-                    }, 1000);
-                    pomo.running = true;
-                    this.activeIntervals.push(pomo.interval);
-                }
-                this.updatePomodoroUI();
-            },
-
-            resetPomodoro() {
-                const pomo = this.clockState.pomodoro;
-                clearInterval(pomo.interval);
-                pomo.running = false;
-                pomo.time = pomo.initial;
-                this.updatePomodoroUI();
-            },
-
-            updatePomodoroUI() {
-                const display = document.getElementById('pomodoro-display');
-                const btn = document.getElementById('btn-pomo-toggle');
-                if(!display) return;
-
-                const pomo = this.clockState.pomodoro;
-                const m = String(Math.floor(pomo.time / 60)).padStart(2, '0');
-                const s = String(pomo.time % 60).padStart(2, '0');
-
-                display.innerText = `${m}:${s}`;
-                btn.innerText = pomo.running ? 'Pausar' : 'Iniciar';
-            },
-
-            // --- SYSTEM ---
-            toggleCalculator() {
-                document.getElementById('modal-calculator').classList.toggle('hidden');
-                if (!document.getElementById('modal-calculator').classList.contains('hidden')) {
-                    // Resetear posición si es necesario o mantenerla
-                    calc.update(); 
-                }
-            },
-            toggleTheme() {
-                this.data.settings.theme = this.data.settings.theme === 'light' ? 'dark' : 'light';
-                this.applyTheme();
-                localStorage.setItem('settings', JSON.stringify(this.data.settings));
-                if(this.currentView === 'settings') this.render();
-            },
-            applyTheme() {
-                const html = document.documentElement;
-                const icon = document.getElementById('theme-icon');
-                if (this.data.settings.theme === 'dark') {
-                    html.classList.add('dark');
-                    if(icon) icon.setAttribute('data-lucide', 'sun');
-                } else {
-                    html.classList.remove('dark');
-                    if(icon) icon.setAttribute('data-lucide', 'moon');
-                }
-                lucide.createIcons();
-            },
-            setFontSize(size) {
-                this.data.settings.fontSize = size;
-                localStorage.setItem('settings', JSON.stringify(this.data.settings));
-                this.render();
-            },
-            activateTrial() {
-                this.data.isPremium = true;
-                localStorage.setItem('isPremium', 'true');
-                this.showToast('¡Premium activado! Disfruta del Pomodoro.', 'success');
-                this.render(); 
-            },
-            saveToStorage() {
-                localStorage.setItem('notes', JSON.stringify(this.data.notes));
-                localStorage.setItem('events', JSON.stringify(this.data.events));
-            },
-            openModal(type) { document.getElementById(`modal-${type}`).classList.remove('hidden'); },
-            closeModal(type) { 
-                document.getElementById(`modal-${type}`).classList.add('hidden'); 
-                if(type === 'confirm') this.pendingDelete = null;
-                // Reset de nota actual al cerrar si era nota
-                if(type === 'note') this.currentNoteId = null;
-            }
-        };
-
-        app.init();
-    </script>
+    <!-- Motores del Juego y Controlador Central -->
+    <script src="app.js"></script>
+    <script src="snake.js"></script>
+    <script src="tetris.js"></script>
+    <script src="slider.js"></script>
+    <script src="sudoku.js"></script>
+    <script src="barricade.js"></script>
+    <script src="ahorcado.js"></script>
 </body>
 </html>
